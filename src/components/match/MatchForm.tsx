@@ -133,7 +133,7 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
   return (
     <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 max-w-lg mx-auto">
       {/* タイトル */}
-      <h2 className="text-lg font-bold text-amber-400 mb-4">
+      <h2 className="text-lg font-bold text-stone-200 mb-4">
         {initialMatch ? '対戦を編集' : '新規対戦を入力'}
       </h2>
 
@@ -210,8 +210,8 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 py-2 px-4 border border-slate-600 rounded-lg text-slate-400
-                     hover:bg-slate-800 transition text-sm font-medium"
+          className="flex-1 py-2 px-4 border border-stone-600 rounded-lg text-stone-400
+                     hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition text-sm font-medium"
         >
           キャンセル
         </button>
@@ -221,8 +221,8 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
           type="button"
           onClick={handleSave}
           disabled={isSaving} // 保存中は押せないようにする
-          className="flex-1 py-2 px-4 bg-amber-500 text-slate-900 rounded-lg
-                     hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed
+          className="flex-1 py-2 px-4 border border-stone-500 text-stone-200 rounded-lg
+                     hover:bg-slate-800 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed
                      transition text-sm font-semibold"
         >
           {isSaving ? '保存中...' : '保存'}

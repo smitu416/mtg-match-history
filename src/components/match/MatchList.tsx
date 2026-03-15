@@ -129,8 +129,8 @@ export function MatchList() {
           {/* CSVエクスポートボタン */}
           <button
             onClick={handleExport}
-            className="ml-auto px-3 py-1.5 text-sm bg-green-700 text-white
-                       rounded-lg hover:bg-green-600 transition"
+            className="ml-auto px-3 py-1.5 text-sm border border-stone-600 text-stone-400
+                       rounded-lg hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
           >
             CSVバックアップ
           </button>
@@ -236,15 +236,15 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         <div className="flex gap-2">
           <button
             onClick={onEdit}
-            className="text-xs px-2.5 py-1 border border-amber-700 text-amber-400
-                       rounded-lg hover:bg-amber-900/30 transition"
+            className="text-xs px-2.5 py-1 border border-stone-600 text-stone-400
+                       rounded-lg hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
           >
             編集
           </button>
           <button
             onClick={onDelete}
-            className="text-xs px-2.5 py-1 border border-red-800 text-red-400
-                       rounded-lg hover:bg-red-900/30 transition"
+            className="text-xs px-2.5 py-1 border border-stone-700 text-stone-500
+                       rounded-lg hover:bg-slate-800 hover:text-red-400 hover:border-red-800 transition"
           >
             削除
           </button>
@@ -300,8 +300,8 @@ function SortButton({ label, field, current, onClick }: SortButtonProps) {
   return (
     <button
       onClick={() => onClick(field)}
-      className={`flex items-center gap-0.5 hover:text-amber-400 transition ${
-        isActive ? 'text-amber-400 font-medium' : ''
+      className={`flex items-center gap-0.5 hover:text-stone-200 transition ${
+        isActive ? 'text-stone-200 font-medium' : ''
       }`}
     >
       {label}

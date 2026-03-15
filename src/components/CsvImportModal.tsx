@@ -97,7 +97,7 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
     >
       {/* モーダル本体 */}
       <div className="bg-slate-900 rounded-xl border border-slate-700 shadow-xl p-5 w-full max-w-md">
-        <h2 className="text-lg font-bold text-amber-400 mb-4">CSVインポート</h2>
+        <h2 className="text-lg font-bold text-stone-300 mb-4">CSVインポート</h2>
         <p className="text-sm text-slate-400 mb-4">
           過去の対戦履歴CSVファイルをインポートします。<br />
           同じIDのデータは上書きされません（スキップ）。
@@ -110,7 +110,7 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
                      text-center cursor-pointer hover:border-amber-600 transition"
         >
           {selectedFile ? (
-            <p className="text-sm text-amber-400 font-medium">{selectedFile.name}</p>
+            <p className="text-sm text-stone-300 font-medium">{selectedFile.name}</p>
           ) : (
             <>
               <p className="text-slate-400 text-sm">クリックしてCSVファイルを選択</p>
@@ -152,16 +152,16 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
         <div className="flex gap-3 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 py-2 px-4 border border-slate-600 rounded-lg text-slate-400
-                       hover:bg-slate-800 transition text-sm"
+            className="flex-1 py-2 px-4 border border-stone-600 rounded-lg text-stone-400
+                       hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition text-sm"
           >
             閉じる
           </button>
           <button
             onClick={handleImport}
             disabled={!selectedFile || isImporting}
-            className="flex-1 py-2 px-4 bg-amber-500 text-slate-900 rounded-lg
-                       hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed
+            className="flex-1 py-2 px-4 border border-stone-500 text-stone-200 rounded-lg
+                       hover:bg-slate-800 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed
                        transition text-sm font-semibold"
           >
             {isImporting ? 'インポート中...' : 'インポート'}

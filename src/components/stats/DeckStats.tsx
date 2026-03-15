@@ -104,7 +104,7 @@ export function DeckStats() {
     <div className="space-y-4">
       {/* ===== デッキ一覧 ===== */}
       <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-        <h3 className="font-bold text-amber-400 mb-3">デッキ別戦績</h3>
+        <h3 className="font-bold text-stone-300 mb-3">デッキ別戦績</h3>
 
         <div className="space-y-3">
           {deckRecords.map((record) => (
@@ -116,7 +116,7 @@ export function DeckStats() {
               className={`
                 p-3 border rounded-lg cursor-pointer transition
                 ${selectedDeck === record.deckName
-                  ? 'border-amber-600 bg-amber-900/20'
+                  ? 'border-stone-400 bg-slate-800'
                   : 'border-slate-700 hover:border-slate-500'
                 }
               `}
@@ -153,7 +153,7 @@ export function DeckStats() {
       {/* ===== 選択したデッキの詳細（相手デッキ別） ===== */}
       {selectedRecord && (
         <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-          <h3 className="font-bold text-amber-400 mb-3">
+          <h3 className="font-bold text-stone-300 mb-3">
             {selectedRecord.deckName} の相手デッキ別成績
           </h3>
 

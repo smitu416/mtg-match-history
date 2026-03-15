@@ -37,14 +37,15 @@ function App() {
       <header className="bg-slate-900 border-b border-slate-700 shadow-md">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* アプリタイトル */}
-          <h1 className="text-xl font-bold text-amber-400 tracking-wide">MTG 対戦履歴</h1>
+          <h1 className="text-xl font-bold text-stone-100 tracking-wide">MTG 対戦履歴</h1>
 
           {/* 右側のボタン群 */}
           <div className="flex gap-2">
             {/* CSVインポートボタン */}
             <button
               onClick={() => setShowImportModal(true)}
-              className="text-slate-400 hover:text-amber-400 text-sm transition px-2 py-1"
+              className="border border-stone-600 text-stone-400 hover:text-stone-200 hover:border-stone-400
+                         text-sm transition px-3 py-1.5 rounded-lg"
             >
               CSVインポート
             </button>
@@ -52,8 +53,8 @@ function App() {
             {/* 新規入力ボタン */}
             <button
               onClick={() => setCurrentPage('new')}
-              className="bg-amber-500 text-slate-900 font-semibold px-4 py-1.5 rounded-lg
-                         text-sm hover:bg-amber-400 transition"
+              className="border border-stone-500 text-stone-200 font-semibold px-4 py-1.5 rounded-lg
+                         text-sm hover:bg-slate-800 hover:border-stone-300 transition"
             >
               ＋ 新規入力
             </button>
@@ -123,8 +124,8 @@ function TabButton({ label, active, onClick }: TabButtonProps) {
       onClick={onClick}
       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
         active
-          ? 'bg-slate-950 text-amber-400 border-t border-x border-slate-700'
-          : 'text-slate-500 hover:text-stone-300'
+          ? 'bg-slate-950 text-stone-100 border-t border-x border-slate-600'
+          : 'text-stone-500 hover:text-stone-300'
       }`}
     >
       {label}

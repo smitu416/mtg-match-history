@@ -95,7 +95,7 @@ export function PlayerStats() {
   // ===================================
   return (
     <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-      <h3 className="font-bold text-amber-400 mb-3">プレイヤー別戦績</h3>
+      <h3 className="font-bold text-stone-300 mb-3">プレイヤー別戦績</h3>
 
       <div className="space-y-3">
         {playerRecords.map((record) => (
