@@ -120,8 +120,8 @@ export function MatchList() {
           {/* フィルタークリアボタン */}
           <button
             onClick={() => setFilter({})}
-            className="px-3 py-1.5 text-sm text-slate-400 border border-slate-600
-                       rounded-lg hover:bg-slate-800 transition"
+            className="px-3 py-1.5 text-sm text-stone-400 border border-stone-600
+                       rounded-lg hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
           >
             クリア
           </button>
@@ -137,20 +137,20 @@ export function MatchList() {
         </div>
 
         {/* 件数表示 */}
-        <p className="text-xs text-slate-500 mt-2">{matches.length} 件</p>
+        <p className="text-xs text-stone-500 mt-2">{matches.length} 件</p>
       </div>
 
       {/* ===== 対戦一覧テーブル ===== */}
       {matches.length === 0 ? (
         // データがない場合の表示
-        <div className="text-center py-16 text-slate-500">
+        <div className="text-center py-16 text-stone-500">
           <p className="text-lg">対戦データがありません</p>
           <p className="text-sm mt-1">「＋ 新規入力」から追加してください</p>
         </div>
       ) : (
         <div className="space-y-2">
           {/* ソートボタン行 */}
-          <div className="flex gap-2 text-xs text-slate-500 px-1">
+          <div className="flex gap-2 text-xs text-stone-500 px-1">
             <SortButton label="ID" field="id" current={sort} onClick={handleSortChange} />
             <SortButton label="自分のデッキ" field="myDeck" current={sort} onClick={handleSortChange} />
             <SortButton label="相手" field="opponentPlayerName" current={sort} onClick={handleSortChange} />
@@ -205,7 +205,7 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
       <div className="flex items-start justify-between">
         <div>
           {/* ID（小さく表示） */}
-          <span className="text-xs text-slate-500 font-mono">{match.id}</span>
+          <span className="text-xs text-stone-500 font-mono">{match.id}</span>
 
           {/* 対戦の概要 */}
           <p className="font-semibold text-stone-100 mt-0.5">
@@ -221,7 +221,7 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         {/* 先攻/後攻バッジ */}
         <span className={`
           text-xs px-2 py-0.5 rounded-full font-medium shrink-0
-          ${match.playOrder === '先攻' ? 'bg-blue-900 text-blue-300' : 'bg-orange-900 text-orange-300'}
+          ${match.playOrder === '先攻' ? 'border border-stone-600 text-stone-400' : 'border border-stone-600 text-stone-400'}
         `}>
           {match.playOrder}
         </span>
@@ -267,12 +267,12 @@ interface FilterSelectProps {
 function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
   return (
     <div>
-      <label className="block text-xs text-slate-400 mb-0.5">{label}</label>
+      <label className="block text-xs text-stone-400 mb-0.5">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="text-sm bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1.5
-                   focus:outline-none focus:ring-2 focus:ring-amber-500"
+                   focus:outline-none focus:ring-2 focus:ring-stone-500"
       >
         <option value="">すべて</option>
         {options.map((opt) => (

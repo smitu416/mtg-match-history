@@ -99,7 +99,7 @@ export function GameResultRow({ gameNumber, game, onChange }: GameResultRowProps
         placeholder={`G${gameNumber} のメモ（使ったカード、決め手など）`}
         rows={2}
         className="w-full text-sm bg-slate-900 text-stone-300 border border-slate-700 rounded p-2 resize-none
-                   focus:outline-none focus:ring-2 focus:ring-amber-500
+                   focus:outline-none focus:ring-2 focus:ring-stone-500
                    placeholder-slate-600"
       />
     </div>

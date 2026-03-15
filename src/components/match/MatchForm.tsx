@@ -277,7 +277,7 @@ function DatalistInput({ value, onChange, placeholder, listId, options }: Datali
         placeholder={placeholder}
         list={listId} // datalistと紐付ける
         className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-3 py-2 text-sm
-                   placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                   placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-stone-500"
       />
       {/* datalist: inputに入力補完候補を提供する（ブラウザが候補を表示してくれる） */}
       <datalist id={listId}>
