@@ -124,7 +124,7 @@ function TabButton({ label, active, onClick }: TabButtonProps) {
       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
         active
           ? 'bg-slate-950 text-amber-400 border-t border-x border-slate-700'
-          : 'text-slate-500 hover:text-slate-300'
+          : 'text-slate-500 hover:text-stone-300'
       }`}
     >
       {label}
