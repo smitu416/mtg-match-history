@@ -36,7 +36,7 @@ const OUTCOME_STYLES: Record<GameOutcome, { active: string; inactive: string }> 
   },
   'ー': {
     active: 'bg-slate-600 text-white border-slate-600',
-    inactive: 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700',
+    inactive: 'bg-slate-800 text-stone-400 border-slate-600 hover:bg-slate-700',
   },
 };
 

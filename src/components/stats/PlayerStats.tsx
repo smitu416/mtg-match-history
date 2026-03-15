@@ -78,13 +78,13 @@ export function PlayerStats() {
 
   // データ取得中
   if (!playerRecords) {
-    return <div className="text-center py-10 text-slate-500">読み込み中...</div>;
+    return <div className="text-center py-10 text-stone-500">読み込み中...</div>;
   }
 
   // データなし
   if (playerRecords.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-500">
+      <div className="text-center py-10 text-stone-500">
         <p>対戦データがありません</p>
       </div>
     );
@@ -124,9 +124,9 @@ function PlayerRecordRow({ record }: PlayerRecordRowProps) {
       {/* プレイヤー名と勝敗数 */}
       <div className="flex justify-between items-center mb-1.5">
         <span className="font-medium text-stone-100">{record.playerName}</span>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-stone-400">
           {record.wins}勝 {record.losses}敗
-          <span className="text-slate-500 ml-1">（{record.total}戦）</span>
+          <span className="text-stone-500 ml-1">（{record.total}戦）</span>
         </span>
       </div>
 

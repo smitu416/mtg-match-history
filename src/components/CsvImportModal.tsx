@@ -98,7 +98,7 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
       {/* モーダル本体 */}
       <div className="bg-slate-900 rounded-xl border border-slate-700 shadow-xl p-5 w-full max-w-md">
         <h2 className="text-lg font-bold text-stone-300 mb-4">CSVインポート</h2>
-        <p className="text-sm text-slate-400 mb-4">
+        <p className="text-sm text-stone-400 mb-4">
           過去の対戦履歴CSVファイルをインポートします。<br />
           同じIDのデータは上書きされません（スキップ）。
         </p>
@@ -113,8 +113,8 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
             <p className="text-sm text-stone-300 font-medium">{selectedFile.name}</p>
           ) : (
             <>
-              <p className="text-slate-400 text-sm">クリックしてCSVファイルを選択</p>
-              <p className="text-slate-500 text-xs mt-1">（例: 2026_03_06_matches.csv）</p>
+              <p className="text-stone-400 text-sm">クリックしてCSVファイルを選択</p>
+              <p className="text-stone-500 text-xs mt-1">（例: 2026_03_06_matches.csv）</p>
             </>
           )}
         </div>
@@ -138,9 +138,9 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
 
         {/* エラー・警告メッセージ */}
         {errors.length > 0 && (
-          <div className="mt-3 p-3 bg-yellow-950 border border-yellow-700 rounded-lg text-sm">
-            <p className="font-medium text-yellow-400 mb-1">警告:</p>
-            <ul className="list-disc list-inside text-yellow-500 space-y-0.5">
+          <div className="mt-3 p-3 bg-slate-800 border border-stone-600 rounded-lg text-sm">
+            <p className="font-medium text-stone-300 mb-1">警告:</p>
+            <ul className="list-disc list-inside text-stone-400 space-y-0.5">
               {errors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}

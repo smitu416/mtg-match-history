@@ -84,12 +84,12 @@ export function DeckStats() {
   });
 
   if (!deckRecords) {
-    return <div className="text-center py-10 text-slate-500">読み込み中...</div>;
+    return <div className="text-center py-10 text-stone-500">読み込み中...</div>;
   }
 
   if (deckRecords.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-500">
+      <div className="text-center py-10 text-stone-500">
         <p>対戦データがありません</p>
       </div>
     );
@@ -124,9 +124,9 @@ export function DeckStats() {
               {/* デッキ名と勝敗数 */}
               <div className="flex justify-between items-center mb-1.5">
                 <span className="font-medium text-stone-100">{record.deckName}</span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-stone-400">
                   {record.wins}勝 {record.losses}敗
-                  <span className="text-slate-500 ml-1">（{record.total}戦）</span>
+                  <span className="text-stone-500 ml-1">（{record.total}戦）</span>
                 </span>
               </div>
 
@@ -171,7 +171,7 @@ export function DeckStats() {
                     {/* 相手デッキ名 */}
                     <span className="w-28 text-stone-300 shrink-0 truncate">{opponentDeck}</span>
                     {/* 勝敗 */}
-                    <span className="text-slate-400 w-20 shrink-0">
+                    <span className="text-stone-400 w-20 shrink-0">
                       {vsRecord.wins}勝{vsRecord.losses}敗
                     </span>
                     {/* 勝率バー */}
@@ -184,7 +184,7 @@ export function DeckStats() {
                         style={{ width: `${vsWinRate}%` }}
                       />
                     </div>
-                    <span className="w-10 text-right text-slate-400">{vsWinRate}%</span>
+                    <span className="w-10 text-right text-stone-400">{vsWinRate}%</span>
                   </div>
                 );
               })}
