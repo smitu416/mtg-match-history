@@ -208,11 +208,11 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
           <span className="text-xs text-slate-500 font-mono">{match.id}</span>
 
           {/* 対戦の概要 */}
-          <p className="font-semibold text-stone-200 mt-0.5">
+          <p className="font-semibold text-amber-100 mt-0.5">
             {match.myDeck}
-            <span className="text-slate-500 mx-1 font-normal">vs</span>
+            <span className="text-amber-700 mx-1 font-normal">vs</span>
             {match.opponentPlayerName}
-            <span className="text-slate-400 text-sm font-normal ml-1">
+            <span className="text-amber-300/70 text-sm font-normal ml-1">
               （{match.opponentDeck}）
             </span>
           </p>
@@ -230,7 +230,7 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
       {/* 下段: ゲーム結果とボタン */}
       <div className="flex items-center justify-between mt-2">
         {/* ゲーム結果サマリー */}
-        <span className="text-sm text-slate-400">{gameSummary}</span>
+        <span className="text-sm text-amber-300/80">{gameSummary}</span>
 
         {/* 編集・削除ボタン */}
         <div className="flex gap-2">
@@ -271,7 +271,7 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="text-sm bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1.5
+        className="text-sm bg-slate-800 text-amber-100 border border-slate-600 rounded-lg px-2 py-1.5
                    focus:outline-none focus:ring-2 focus:ring-amber-500"
       >
         <option value="">すべて</option>

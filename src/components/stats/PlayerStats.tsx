@@ -123,7 +123,7 @@ function PlayerRecordRow({ record }: PlayerRecordRowProps) {
     <div className="p-3 border border-slate-700 rounded-lg">
       {/* プレイヤー名と勝敗数 */}
       <div className="flex justify-between items-center mb-1.5">
-        <span className="font-medium text-stone-200">{record.playerName}</span>
+        <span className="font-medium text-amber-100">{record.playerName}</span>
         <span className="text-sm text-slate-400">
           {record.wins}勝 {record.losses}敗
           <span className="text-slate-500 ml-1">（{record.total}戦）</span>
@@ -138,7 +138,7 @@ function PlayerRecordRow({ record }: PlayerRecordRowProps) {
             style={{ width: `${record.winRate}%` }} // インラインスタイルで幅を動的に設定
           />
         </div>
-        <span className="text-sm font-semibold text-stone-300 w-10 text-right">
+        <span className="text-sm font-semibold text-amber-200 w-10 text-right">
           {record.winRate}%
         </span>
       </div>
