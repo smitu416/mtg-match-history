@@ -96,9 +96,9 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
       }}
     >
       {/* モーダル本体 */}
-      <div className="bg-white rounded-xl shadow-xl p-5 w-full max-w-md">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">CSVインポート</h2>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 shadow-xl p-5 w-full max-w-md">
+        <h2 className="text-lg font-bold text-amber-400 mb-4">CSVインポート</h2>
+        <p className="text-sm text-slate-400 mb-4">
           過去の対戦履歴CSVファイルをインポートします。<br />
           同じIDのデータは上書きされません（スキップ）。
         </p>
@@ -106,15 +106,15 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
         {/* ファイル選択エリア */}
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 rounded-lg p-6
-                     text-center cursor-pointer hover:border-indigo-400 transition"
+          className="border-2 border-dashed border-slate-600 rounded-lg p-6
+                     text-center cursor-pointer hover:border-amber-600 transition"
         >
           {selectedFile ? (
-            <p className="text-sm text-indigo-600 font-medium">{selectedFile.name}</p>
+            <p className="text-sm text-amber-400 font-medium">{selectedFile.name}</p>
           ) : (
             <>
-              <p className="text-gray-500 text-sm">クリックしてCSVファイルを選択</p>
-              <p className="text-gray-400 text-xs mt-1">（例: 2026_03_06_matches.csv）</p>
+              <p className="text-slate-400 text-sm">クリックしてCSVファイルを選択</p>
+              <p className="text-slate-500 text-xs mt-1">（例: 2026_03_06_matches.csv）</p>
             </>
           )}
         </div>
@@ -130,17 +130,17 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
 
         {/* 成功メッセージ */}
         {result && (
-          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg
-                          text-green-700 text-sm">
+          <div className="mt-3 p-3 bg-green-950 border border-green-700 rounded-lg
+                          text-green-400 text-sm">
             {result}
           </div>
         )}
 
         {/* エラー・警告メッセージ */}
         {errors.length > 0 && (
-          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-            <p className="font-medium text-yellow-800 mb-1">警告:</p>
-            <ul className="list-disc list-inside text-yellow-700 space-y-0.5">
+          <div className="mt-3 p-3 bg-yellow-950 border border-yellow-700 rounded-lg text-sm">
+            <p className="font-medium text-yellow-400 mb-1">警告:</p>
+            <ul className="list-disc list-inside text-yellow-500 space-y-0.5">
               {errors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -152,16 +152,16 @@ export function CsvImportModal({ onClose }: CsvImportModalProps) {
         <div className="flex gap-3 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700
-                       hover:bg-gray-50 transition text-sm"
+            className="flex-1 py-2 px-4 border border-slate-600 rounded-lg text-slate-400
+                       hover:bg-slate-800 transition text-sm"
           >
             閉じる
           </button>
           <button
             onClick={handleImport}
             disabled={!selectedFile || isImporting}
-            className="flex-1 py-2 px-4 bg-indigo-600 text-white rounded-lg
-                       hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
+            className="flex-1 py-2 px-4 bg-amber-500 text-slate-900 rounded-lg
+                       hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed
                        transition text-sm font-semibold"
           >
             {isImporting ? 'インポート中...' : 'インポート'}

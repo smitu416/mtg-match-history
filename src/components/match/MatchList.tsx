@@ -91,7 +91,7 @@ export function MatchList() {
   return (
     <div>
       {/* ===== フィルター・操作バー ===== */}
-      <div className="bg-white rounded-xl shadow p-4 mb-4">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 p-4 mb-4">
         <div className="flex flex-wrap gap-3 items-end">
           {/* 自分のデッキフィルター */}
           <FilterSelect
@@ -120,8 +120,8 @@ export function MatchList() {
           {/* フィルタークリアボタン */}
           <button
             onClick={() => setFilter({})}
-            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300
-                       rounded-lg hover:bg-gray-50 transition"
+            className="px-3 py-1.5 text-sm text-slate-400 border border-slate-600
+                       rounded-lg hover:bg-slate-800 transition"
           >
             クリア
           </button>
@@ -129,28 +129,28 @@ export function MatchList() {
           {/* CSVエクスポートボタン */}
           <button
             onClick={handleExport}
-            className="ml-auto px-3 py-1.5 text-sm bg-green-600 text-white
-                       rounded-lg hover:bg-green-700 transition"
+            className="ml-auto px-3 py-1.5 text-sm bg-green-700 text-white
+                       rounded-lg hover:bg-green-600 transition"
           >
             CSVバックアップ
           </button>
         </div>
 
         {/* 件数表示 */}
-        <p className="text-xs text-gray-500 mt-2">{matches.length} 件</p>
+        <p className="text-xs text-slate-500 mt-2">{matches.length} 件</p>
       </div>
 
       {/* ===== 対戦一覧テーブル ===== */}
       {matches.length === 0 ? (
         // データがない場合の表示
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-slate-500">
           <p className="text-lg">対戦データがありません</p>
           <p className="text-sm mt-1">「＋ 新規入力」から追加してください</p>
         </div>
       ) : (
         <div className="space-y-2">
           {/* ソートボタン行 */}
-          <div className="flex gap-2 text-xs text-gray-500 px-1">
+          <div className="flex gap-2 text-xs text-slate-500 px-1">
             <SortButton label="ID" field="id" current={sort} onClick={handleSortChange} />
             <SortButton label="自分のデッキ" field="myDeck" current={sort} onClick={handleSortChange} />
             <SortButton label="相手" field="opponentPlayerName" current={sort} onClick={handleSortChange} />
@@ -197,22 +197,22 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
 
   // マッチ全体の勝ち負けで枠線の色を変える
   const borderColor =
-    wins > losses ? 'border-l-green-500' : losses > wins ? 'border-l-red-500' : 'border-l-gray-300';
+    wins > losses ? 'border-l-green-500' : losses > wins ? 'border-l-red-500' : 'border-l-slate-600';
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 border-l-4 ${borderColor} p-4`}>
+    <div className={`bg-slate-900 rounded-xl border border-slate-700 border-l-4 ${borderColor} p-4`}>
       {/* 上段: ID・デッキ情報・先攻後攻 */}
       <div className="flex items-start justify-between">
         <div>
           {/* ID（小さく表示） */}
-          <span className="text-xs text-gray-400 font-mono">{match.id}</span>
+          <span className="text-xs text-slate-500 font-mono">{match.id}</span>
 
           {/* 対戦の概要 */}
-          <p className="font-semibold text-gray-800 mt-0.5">
+          <p className="font-semibold text-slate-100 mt-0.5">
             {match.myDeck}
-            <span className="text-gray-400 mx-1 font-normal">vs</span>
+            <span className="text-slate-500 mx-1 font-normal">vs</span>
             {match.opponentPlayerName}
-            <span className="text-gray-500 text-sm font-normal ml-1">
+            <span className="text-slate-400 text-sm font-normal ml-1">
               （{match.opponentDeck}）
             </span>
           </p>
@@ -221,7 +221,7 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
         {/* 先攻/後攻バッジ */}
         <span className={`
           text-xs px-2 py-0.5 rounded-full font-medium shrink-0
-          ${match.playOrder === '先攻' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}
+          ${match.playOrder === '先攻' ? 'bg-blue-900 text-blue-300' : 'bg-orange-900 text-orange-300'}
         `}>
           {match.playOrder}
         </span>
@@ -230,21 +230,21 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
       {/* 下段: ゲーム結果とボタン */}
       <div className="flex items-center justify-between mt-2">
         {/* ゲーム結果サマリー */}
-        <span className="text-sm text-gray-600">{gameSummary}</span>
+        <span className="text-sm text-slate-400">{gameSummary}</span>
 
         {/* 編集・削除ボタン */}
         <div className="flex gap-2">
           <button
             onClick={onEdit}
-            className="text-xs px-2.5 py-1 border border-indigo-300 text-indigo-600
-                       rounded-lg hover:bg-indigo-50 transition"
+            className="text-xs px-2.5 py-1 border border-amber-700 text-amber-400
+                       rounded-lg hover:bg-amber-900/30 transition"
           >
             編集
           </button>
           <button
             onClick={onDelete}
-            className="text-xs px-2.5 py-1 border border-red-200 text-red-500
-                       rounded-lg hover:bg-red-50 transition"
+            className="text-xs px-2.5 py-1 border border-red-800 text-red-400
+                       rounded-lg hover:bg-red-900/30 transition"
           >
             削除
           </button>
@@ -267,12 +267,12 @@ interface FilterSelectProps {
 function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-0.5">{label}</label>
+      <label className="block text-xs text-slate-400 mb-0.5">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5
-                   focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        className="text-sm bg-slate-800 text-slate-200 border border-slate-600 rounded-lg px-2 py-1.5
+                   focus:outline-none focus:ring-2 focus:ring-amber-500"
       >
         <option value="">すべて</option>
         {options.map((opt) => (
@@ -300,8 +300,8 @@ function SortButton({ label, field, current, onClick }: SortButtonProps) {
   return (
     <button
       onClick={() => onClick(field)}
-      className={`flex items-center gap-0.5 hover:text-indigo-600 transition ${
-        isActive ? 'text-indigo-600 font-medium' : ''
+      className={`flex items-center gap-0.5 hover:text-amber-400 transition ${
+        isActive ? 'text-amber-400 font-medium' : ''
       }`}
     >
       {label}
