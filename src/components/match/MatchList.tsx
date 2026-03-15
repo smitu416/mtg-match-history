@@ -9,6 +9,7 @@ import { useMatches, deleteMatch } from '../../hooks/useMatches';
 import { useMyDeckNames, useOpponentPlayerNames, useOpponentDeckNames } from '../../hooks/useDecks';
 import { exportMatchesToCsv } from '../../services/csvExport';
 import { getAllMatches } from '../../hooks/useMatches';
+import { useMatchGroups, updateGroupName } from '../../hooks/useMatchGroups';
 import { MatchForm } from './MatchForm';
 import type { Match, FilterOptions, SortOptions, SortField } from '../../types';
 
@@ -35,6 +36,12 @@ export function MatchList() {
   const myDeckNames = useMyDeckNames();
   const opponentPlayerNames = useOpponentPlayerNames();
   const opponentDeckNames = useOpponentDeckNames();
+
+  // グループ一覧をDBから取得する
+  const matchGroups = useMatchGroups();
+
+  // グループ表示モード（true=グループ別, false=フラットリスト）
+  const [isGroupView, setIsGroupView] = useState(true);
 
   // -----------------------------------
   // 削除ボタンが押されたときの処理
@@ -140,14 +147,48 @@ export function MatchList() {
         <p className="text-xs text-stone-500 mt-2">{matches.length} 件</p>
       </div>
 
-      {/* ===== 対戦一覧テーブル ===== */}
+      {/* ===== 表示切り替えボタン ===== */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs text-stone-500">表示:</span>
+        <button
+          onClick={() => setIsGroupView(true)}
+          className={`text-xs px-3 py-1 rounded-lg border transition ${
+            isGroupView
+              ? 'border-stone-400 text-stone-200 bg-slate-800'
+              : 'border-slate-700 text-stone-500 hover:border-stone-600 hover:text-stone-400'
+          }`}
+        >
+          グループ
+        </button>
+        <button
+          onClick={() => setIsGroupView(false)}
+          className={`text-xs px-3 py-1 rounded-lg border transition ${
+            !isGroupView
+              ? 'border-stone-400 text-stone-200 bg-slate-800'
+              : 'border-slate-700 text-stone-500 hover:border-stone-600 hover:text-stone-400'
+          }`}
+        >
+          リスト
+        </button>
+      </div>
+
+      {/* ===== 対戦一覧 ===== */}
       {matches.length === 0 ? (
         // データがない場合の表示
         <div className="text-center py-16 text-stone-500">
           <p className="text-lg">対戦データがありません</p>
           <p className="text-sm mt-1">「＋ 新規入力」から追加してください</p>
         </div>
+      ) : isGroupView ? (
+        // ===== グループ表示モード =====
+        <GroupedMatchList
+          matches={matches}
+          matchGroups={matchGroups ?? []}
+          onEdit={(match) => setEditingMatch(match)}
+          onDelete={handleDelete}
+        />
       ) : (
+        // ===== フラットリスト表示モード =====
         <div className="space-y-2">
           {/* ソートボタン行 */}
           <div className="flex gap-2 text-xs text-stone-500 px-1">
@@ -167,6 +208,136 @@ export function MatchList() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ===================================
+// サブコンポーネント: グループ別対戦一覧
+// ===================================
+// 試合を日付（createdAt）でグループ分けして表示する。
+// DBに対応するMatchGroupがあればそのnameを使い、
+// なければ createdAt から "yyyy/mm/dd" 形式のグループ名を生成する。
+interface GroupedMatchListProps {
+  matches: Match[];
+  matchGroups: import('../../types/turnHistory').MatchGroup[];
+  onEdit: (match: Match) => void;
+  onDelete: (match: Match) => void;
+}
+
+function GroupedMatchList({ matches, matchGroups, onEdit, onDelete }: GroupedMatchListProps) {
+  // 編集中のグループ名を管理する（groupId → 編集中テキスト）
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
+
+  // -----------------------------------
+  // 試合を日付ごとにグループ化する（クライアントサイド処理）
+  // DBのMatchGroupがあればそのnameを使う
+  // -----------------------------------
+  // 日付文字列（"2026-03-15"）からグループIDを生成する
+  const getGroupId = (dateStr: string) => `group-${dateStr.replace(/-/g, '')}`;
+
+  // 試合の createdAt から日付部分（"2026-03-15"）を取り出す
+  const getDateKey = (createdAt: string) => createdAt.slice(0, 10);
+
+  // 試合を日付ごとにグループ化する
+  const grouped = matches.reduce<Map<string, Match[]>>((acc, match) => {
+    const dateKey = getDateKey(match.createdAt);
+    if (!acc.has(dateKey)) acc.set(dateKey, []);
+    acc.get(dateKey)!.push(match);
+    return acc;
+  }, new Map());
+
+  // グループを日付の新しい順にソートする
+  const sortedDateKeys = [...grouped.keys()].sort((a, b) => b.localeCompare(a));
+
+  // DBのMatchGroupをIDでマップ化しておく（O(1)検索のため）
+  const groupMap = new Map(matchGroups.map((g) => [g.id, g]));
+
+  // -----------------------------------
+  // グループ名の取得（DBにあればDB名、なければ日付形式）
+  // -----------------------------------
+  const getGroupName = (dateKey: string): string => {
+    const groupId = getGroupId(dateKey);
+    const dbGroup = groupMap.get(groupId);
+    if (dbGroup) return dbGroup.name;
+    // DBにない場合は "yyyy/mm/dd" 形式に変換する
+    const [yyyy, mm, dd] = dateKey.split('-');
+    return `${yyyy}/${mm}/${dd}`;
+  };
+
+  // -----------------------------------
+  // グループ名の編集開始
+  // -----------------------------------
+  const handleStartEdit = (dateKey: string) => {
+    const groupId = getGroupId(dateKey);
+    setEditingGroupId(groupId);
+    setEditingGroupName(getGroupName(dateKey));
+  };
+
+  // -----------------------------------
+  // グループ名の保存（Enter / blur 時）
+  // -----------------------------------
+  const handleSaveGroupName = async (groupId: string) => {
+    if (editingGroupName.trim()) {
+      await updateGroupName(groupId, editingGroupName.trim());
+    }
+    setEditingGroupId(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      {sortedDateKeys.map((dateKey) => {
+        const groupMatches = grouped.get(dateKey)!;
+        const groupId = getGroupId(dateKey);
+        const isEditing = editingGroupId === groupId;
+
+        return (
+          <div key={dateKey} className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+            {/* グループヘッダー（日付・グループ名） */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-700 bg-slate-800/50">
+              {isEditing ? (
+                // 編集中: テキスト入力を表示する
+                <input
+                  autoFocus
+                  value={editingGroupName}
+                  onChange={(e) => setEditingGroupName(e.target.value)}
+                  onBlur={() => handleSaveGroupName(groupId)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveGroupName(groupId);
+                    if (e.key === 'Escape') setEditingGroupId(null);
+                  }}
+                  className="flex-1 bg-slate-800 text-stone-200 border border-stone-500 rounded px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              ) : (
+                // 通常時: グループ名をクリックで編集開始
+                <button
+                  onClick={() => handleStartEdit(dateKey)}
+                  className="flex-1 text-left text-sm font-semibold text-stone-300 hover:text-stone-100 transition"
+                  title="クリックしてグループ名を編集"
+                >
+                  {getGroupName(dateKey)}
+                  <span className="ml-2 text-xs text-stone-600 font-normal">✏️</span>
+                </button>
+              )}
+              {/* グループ内の件数 */}
+              <span className="text-xs text-stone-500 shrink-0">{groupMatches.length}件</span>
+            </div>
+
+            {/* グループ内の対戦カード一覧 */}
+            <div className="p-3 space-y-2">
+              {groupMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  onEdit={() => onEdit(match)}
+                  onDelete={() => onDelete(match)}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

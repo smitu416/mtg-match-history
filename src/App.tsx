@@ -10,12 +10,14 @@ import { MatchForm } from './components/match/MatchForm';
 import { PlayerStats } from './components/stats/PlayerStats';
 import { DeckStats } from './components/stats/DeckStats';
 import { CsvImportModal } from './components/CsvImportModal';
+import TurnHistoryPage from './components/turn/TurnHistoryPage';
 import './index.css';
 
 // -----------------------------------
 // 表示するページを表す型
+// 'turn-history' = ターン履歴入力ページ（新規入力の拡張版）
 // -----------------------------------
-type Page = 'list' | 'new' | 'stats';
+type Page = 'list' | 'new' | 'stats' | 'turn-history';
 
 // -----------------------------------
 // App コンポーネント本体
@@ -50,9 +52,9 @@ function App() {
               CSVインポート
             </button>
 
-            {/* 新規入力ボタン */}
+            {/* 新規入力ボタン（クリックするとターン履歴入力ページに遷移） */}
             <button
-              onClick={() => setCurrentPage('new')}
+              onClick={() => setCurrentPage('turn-history')}
               className="border border-stone-500 text-stone-200 font-semibold px-4 py-1.5 rounded-lg
                          text-sm hover:bg-slate-800 hover:border-stone-300 transition"
             >
@@ -79,16 +81,25 @@ function App() {
       </header>
 
       {/* ===== メインコンテンツ ===== */}
-      <main className="max-w-2xl mx-auto px-4 py-5">
+      {/* ターン履歴ページは画面を広く使うので max-w-2xl の制限を外す */}
+      <main className={currentPage === 'turn-history' ? 'px-3 py-3 h-[calc(100vh-7rem)] flex flex-col' : 'max-w-2xl mx-auto px-4 py-5'}>
 
         {/* 対戦一覧ページ */}
         {currentPage === 'list' && <MatchList />}
 
-        {/* 新規入力ページ */}
+        {/* 新規入力ページ（旧 MatchForm: 簡易入力用に残す） */}
         {currentPage === 'new' && (
           <MatchForm
             onSave={() => setCurrentPage('list')}   // 保存後は一覧に戻る
             onCancel={() => setCurrentPage('list')} // キャンセルも一覧に戻る
+          />
+        )}
+
+        {/* ターン履歴入力ページ（「＋ 新規入力」ボタンから遷移） */}
+        {currentPage === 'turn-history' && (
+          <TurnHistoryPage
+            onSave={() => setCurrentPage('list')}
+            onCancel={() => setCurrentPage('list')}
           />
         )}
 
