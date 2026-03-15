@@ -1,5 +1,7 @@
 // Vite の設定ファイル
 // ビルドツールの動作をカスタマイズする
+// `vitest` の型定義を読み込むことで、`test` プロパティを TypeScript に認識させる
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'

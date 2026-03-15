@@ -84,12 +84,12 @@ export function DeckStats() {
   });
 
   if (!deckRecords) {
-    return <div className="text-center py-10 text-gray-400">読み込み中...</div>;
+    return <div className="text-center py-10 text-stone-500">読み込み中...</div>;
   }
 
   if (deckRecords.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-400">
+      <div className="text-center py-10 text-stone-500">
         <p>対戦データがありません</p>
       </div>
     );
@@ -103,8 +103,8 @@ export function DeckStats() {
   return (
     <div className="space-y-4">
       {/* ===== デッキ一覧 ===== */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <h3 className="font-bold text-gray-800 mb-3">デッキ別戦績</h3>
+      <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
+        <h3 className="font-bold text-stone-300 mb-3">デッキ別戦績</h3>
 
         <div className="space-y-3">
           {deckRecords.map((record) => (
@@ -116,23 +116,23 @@ export function DeckStats() {
               className={`
                 p-3 border rounded-lg cursor-pointer transition
                 ${selectedDeck === record.deckName
-                  ? 'border-indigo-400 bg-indigo-50'
-                  : 'border-gray-100 hover:border-indigo-200'
+                  ? 'border-stone-400 bg-slate-800'
+                  : 'border-slate-700 hover:border-slate-500'
                 }
               `}
             >
               {/* デッキ名と勝敗数 */}
               <div className="flex justify-between items-center mb-1.5">
-                <span className="font-medium text-gray-800">{record.deckName}</span>
-                <span className="text-sm text-gray-600">
+                <span className="font-medium text-stone-100">{record.deckName}</span>
+                <span className="text-sm text-stone-400">
                   {record.wins}勝 {record.losses}敗
-                  <span className="text-gray-400 ml-1">（{record.total}戦）</span>
+                  <span className="text-stone-500 ml-1">（{record.total}戦）</span>
                 </span>
               </div>
 
               {/* 勝率バー */}
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div className="flex-1 bg-slate-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
                       record.winRate >= 60 ? 'bg-green-500' :
@@ -141,7 +141,7 @@ export function DeckStats() {
                     style={{ width: `${record.winRate}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-gray-700 w-10 text-right">
+                <span className="text-sm font-semibold text-stone-300 w-10 text-right">
                   {record.winRate}%
                 </span>
               </div>
@@ -152,8 +152,8 @@ export function DeckStats() {
 
       {/* ===== 選択したデッキの詳細（相手デッキ別） ===== */}
       {selectedRecord && (
-        <div className="bg-white rounded-xl shadow p-4">
-          <h3 className="font-bold text-gray-800 mb-3">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
+          <h3 className="font-bold text-stone-300 mb-3">
             {selectedRecord.deckName} の相手デッキ別成績
           </h3>
 
@@ -169,13 +169,13 @@ export function DeckStats() {
                 return (
                   <div key={opponentDeck} className="flex items-center gap-3 text-sm">
                     {/* 相手デッキ名 */}
-                    <span className="w-28 text-gray-700 shrink-0 truncate">{opponentDeck}</span>
+                    <span className="w-28 text-stone-300 shrink-0 truncate">{opponentDeck}</span>
                     {/* 勝敗 */}
-                    <span className="text-gray-600 w-20 shrink-0">
+                    <span className="text-stone-400 w-20 shrink-0">
                       {vsRecord.wins}勝{vsRecord.losses}敗
                     </span>
                     {/* 勝率バー */}
-                    <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                    <div className="flex-1 bg-slate-700 rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full ${
                           vsWinRate >= 60 ? 'bg-green-500' :
@@ -184,7 +184,7 @@ export function DeckStats() {
                         style={{ width: `${vsWinRate}%` }}
                       />
                     </div>
-                    <span className="w-10 text-right text-gray-600">{vsWinRate}%</span>
+                    <span className="w-10 text-right text-stone-400">{vsWinRate}%</span>
                   </div>
                 );
               })}

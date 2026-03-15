@@ -28,7 +28,7 @@ export function useMatches(filter?: FilterOptions, sort?: SortOptions) {
   // DBのデータが変わると自動的にコンポーネントを再描画してくれる。
   const matches = useLiveQuery(async () => {
     // まず全件取得する
-    let query = db.matches.toCollection();
+    const query = db.matches.toCollection();
 
     // toArray() で実際のデータ配列を取得する
     let result = await query.toArray();

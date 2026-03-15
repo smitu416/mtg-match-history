@@ -31,20 +31,21 @@ function App() {
   // 表示部分（JSX）
   // ===================================
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-950">
 
       {/* ===== ヘッダー ===== */}
-      <header className="bg-indigo-800 text-white shadow-md">
+      <header className="bg-slate-900 border-b border-slate-700 shadow-md">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* アプリタイトル */}
-          <h1 className="text-xl font-bold">MTG 対戦履歴</h1>
+          <h1 className="text-xl font-bold text-stone-100 tracking-wide">MTG 対戦履歴</h1>
 
           {/* 右側のボタン群 */}
           <div className="flex gap-2">
             {/* CSVインポートボタン */}
             <button
               onClick={() => setShowImportModal(true)}
-              className="text-indigo-200 hover:text-white text-sm transition px-2 py-1"
+              className="border border-stone-600 text-stone-400 hover:text-stone-200 hover:border-stone-400
+                         text-sm transition px-3 py-1.5 rounded-lg"
             >
               CSVインポート
             </button>
@@ -52,8 +53,8 @@ function App() {
             {/* 新規入力ボタン */}
             <button
               onClick={() => setCurrentPage('new')}
-              className="bg-white text-indigo-800 font-semibold px-4 py-1.5 rounded-lg
-                         text-sm hover:bg-indigo-50 transition"
+              className="border border-stone-500 text-stone-200 font-semibold px-4 py-1.5 rounded-lg
+                         text-sm hover:bg-slate-800 hover:border-stone-300 transition"
             >
               ＋ 新規入力
             </button>
@@ -123,8 +124,8 @@ function TabButton({ label, active, onClick }: TabButtonProps) {
       onClick={onClick}
       className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
         active
-          ? 'bg-white text-indigo-800'
-          : 'text-indigo-200 hover:text-white'
+          ? 'bg-slate-950 text-stone-100 border-t border-x border-slate-600'
+          : 'text-stone-500 hover:text-stone-300'
       }`}
     >
       {label}
