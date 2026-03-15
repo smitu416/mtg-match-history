@@ -197,7 +197,7 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
 
         {/* ===== ゲーム結果 ===== */}
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-amber-200">ゲーム結果</label>
+          <label className="block text-sm font-semibold text-stone-300">ゲーム結果</label>
           <GameResultRow gameNumber={1} game={game1} onChange={setGame1} />
           <GameResultRow gameNumber={2} game={game2} onChange={setGame2} />
           <GameResultRow gameNumber={3} game={game3} onChange={setGame3} />
@@ -245,7 +245,7 @@ interface FormFieldProps {
 function FormField({ label, required, children }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-amber-200 mb-1">
+      <label className="block text-sm font-semibold text-stone-300 mb-1">
         {label}
         {/* 必須マーク */}
         {required && <span className="text-red-400 ml-1">*</span>}
@@ -276,7 +276,7 @@ function DatalistInput({ value, onChange, placeholder, listId, options }: Datali
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         list={listId} // datalistと紐付ける
-        className="w-full bg-slate-800 text-amber-100 border border-slate-600 rounded-lg px-3 py-2 text-sm
+        className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-3 py-2 text-sm
                    placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
       />
       {/* datalist: inputに入力補完候補を提供する（ブラウザが候補を表示してくれる） */}

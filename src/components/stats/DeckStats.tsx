@@ -123,7 +123,7 @@ export function DeckStats() {
             >
               {/* デッキ名と勝敗数 */}
               <div className="flex justify-between items-center mb-1.5">
-                <span className="font-medium text-amber-100">{record.deckName}</span>
+                <span className="font-medium text-stone-100">{record.deckName}</span>
                 <span className="text-sm text-slate-400">
                   {record.wins}勝 {record.losses}敗
                   <span className="text-slate-500 ml-1">（{record.total}戦）</span>
@@ -141,7 +141,7 @@ export function DeckStats() {
                     style={{ width: `${record.winRate}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-amber-200 w-10 text-right">
+                <span className="text-sm font-semibold text-stone-300 w-10 text-right">
                   {record.winRate}%
                 </span>
               </div>
@@ -169,7 +169,7 @@ export function DeckStats() {
                 return (
                   <div key={opponentDeck} className="flex items-center gap-3 text-sm">
                     {/* 相手デッキ名 */}
-                    <span className="w-28 text-amber-200 shrink-0 truncate">{opponentDeck}</span>
+                    <span className="w-28 text-stone-300 shrink-0 truncate">{opponentDeck}</span>
                     {/* 勝敗 */}
                     <span className="text-slate-400 w-20 shrink-0">
                       {vsRecord.wins}勝{vsRecord.losses}敗

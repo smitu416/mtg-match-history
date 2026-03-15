@@ -63,7 +63,7 @@ export function GameResultRow({ gameNumber, game, onChange }: GameResultRowProps
       {/* ゲーム番号とボタン行 */}
       <div className="flex items-center gap-3 mb-2">
         {/* ゲーム番号ラベル（例: "G1"） */}
-        <span className="font-bold text-amber-200 w-6 shrink-0">
+        <span className="font-bold text-stone-300 w-6 shrink-0">
           G{gameNumber}
         </span>
 
@@ -98,7 +98,7 @@ export function GameResultRow({ gameNumber, game, onChange }: GameResultRowProps
         onChange={(e) => handleNotesChange(e.target.value)}
         placeholder={`G${gameNumber} のメモ（使ったカード、決め手など）`}
         rows={2}
-        className="w-full text-sm bg-slate-900 text-amber-200 border border-slate-700 rounded p-2 resize-none
+        className="w-full text-sm bg-slate-900 text-stone-300 border border-slate-700 rounded p-2 resize-none
                    focus:outline-none focus:ring-2 focus:ring-amber-500
                    placeholder-slate-600"
       />
