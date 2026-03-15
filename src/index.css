@@ -1,0 +1,8 @@
+/* グローバルスタイル - TailwindCSSの基本スタイルを読み込む */
+@import "tailwindcss";
+
+/* 日本語フォントを優先的に使用する */
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+  margin: 0;
+}
