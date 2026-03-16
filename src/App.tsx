@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { MatchList } from './components/match/MatchList';
 import { MatchForm } from './components/match/MatchForm';
 import { PlayerStats } from './components/stats/PlayerStats';
-import { DeckStats } from './components/stats/DeckStats';
+import { DeckStats, DeckDetailStats } from './components/stats/DeckStats';
+import { OverallStats } from './components/stats/OverallStats';
 import { CsvImportModal } from './components/CsvImportModal';
 import TurnHistoryPage from './components/turn/TurnHistoryPage';
 import './index.css';
@@ -104,18 +105,32 @@ function App() {
         )}
 
         {/* 戦績ページ */}
-        {currentPage === 'stats' && (
-          <div className="space-y-5">
-            <PlayerStats />
-            <DeckStats />
-          </div>
-        )}
+        {currentPage === 'stats' && <StatsPage />}
       </main>
 
       {/* CSVインポートモーダル（表示/非表示は showImportModal で切り替え） */}
       {showImportModal && (
         <CsvImportModal onClose={() => setShowImportModal(false)} />
       )}
+    </div>
+  );
+}
+
+// ===================================
+// 戦績ページコンポーネント（2×2 グリッド）
+// ===================================
+// 総合戦績 | プレイヤー別戦績
+// デッキ別戦績 | 相手デッキ別戦績（選択中のデッキに対応）
+function StatsPage() {
+  // 選択中のデッキ名（DeckStats と DeckDetailStats で共有する）
+  const [selectedDeck, setSelectedDeck] = useState<string | null>(null);
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <OverallStats />
+      <PlayerStats />
+      <DeckStats selectedDeck={selectedDeck} onSelectDeck={setSelectedDeck} />
+      <DeckDetailStats selectedDeck={selectedDeck} />
     </div>
   );
 }

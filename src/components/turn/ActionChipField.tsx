@@ -8,9 +8,10 @@
 // 1. ユーザーがこのAction欄をクリックすると「アクティブ」になる
 // 2. アクティブな状態でカード名ボタンや相手行動ボタンを押すと
 //    そのラベルがチップとして追加される
-// 3. チップの × ボタンで個別に削除できる
+// 3. チップ末尾のテキスト入力欄に文字を打って Enter でもチップ追加できる
+// 4. チップの × ボタンで個別に削除できる
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { ActionChip } from '../../types/turnHistory';
 
 // -----------------------------------
@@ -32,9 +33,29 @@ const ActionChipField: React.FC<ActionChipFieldProps> = ({
   chips,
   isActive,
   onActivate,
+  onAddChip,
   onRemoveChip,
   placeholder = 'タップしてカードを追加',
 }) => {
+  // フリーテキスト入力欄の内容
+  const [inputText, setInputText] = useState('');
+
+  // -----------------------------------
+  // Enter キーでフリー入力テキストをチップ化する
+  // -----------------------------------
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputText.trim()) {
+      // 入力されたテキストをチップとして追加する
+      onAddChip({
+        id: `free-${Date.now()}`,
+        label: inputText.trim(),
+        type: 'card',
+      });
+      setInputText('');
+      e.preventDefault(); // フォームのサブミットなどを防ぐ
+    }
+  };
+
   return (
     <div
       // クリックするとアクティブになる
@@ -81,15 +102,21 @@ const ActionChipField: React.FC<ActionChipFieldProps> = ({
         </span>
       ))}
 
-      {/* チップが0件の場合はプレースホルダーを表示する */}
-      {chips.length === 0 && (
-        <span className="text-xs text-stone-600 pointer-events-none">
-          {placeholder}
-        </span>
-      )}
+      {/* フリーテキスト入力欄（チップの後ろに inline で配置） */}
+      {/* フォーカスするとアクティブになり、Enter でチップ追加できる */}
+      <input
+        value={inputText}
+        onChange={(e) => setInputText(e.target.value)}
+        onFocus={onActivate}           // フォーカスしたらこのフィールドをアクティブにする
+        onKeyDown={handleKeyDown}      // Enter でチップ化
+        onClick={(e) => e.stopPropagation()} // クリックが親の onClick に伝わらないように
+        placeholder={chips.length === 0 ? placeholder : 'フリー入力…'}
+        className="flex-1 min-w-[5rem] bg-transparent text-stone-200 text-xs outline-none placeholder-stone-600 cursor-text"
+      />
 
       {/* アクティブ時はカーソルのような点滅を表示して「入力受付中」を伝える */}
-      {isActive && (
+      {/* テキスト入力欄が表示されているので、入力欄が空の場合のみ表示する */}
+      {isActive && !inputText && chips.length > 0 && (
         <span className="w-0.5 h-4 bg-stone-400 animate-pulse rounded-full ml-0.5" />
       )}
     </div>

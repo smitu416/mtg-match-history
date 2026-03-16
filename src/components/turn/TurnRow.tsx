@@ -106,9 +106,15 @@ const TurnRow: React.FC<TurnRowProps> = ({
   }, [data, onUpdate]);
 
   // -----------------------------------
-  // ライフ履歴を "20→18→15" 形式の文字列に変換する
+  // ライフ履歴の特定エントリを削除する処理
   // -----------------------------------
-  const lifeHistoryText = data.lifeHistory.map((e) => e.life).join('→');
+  const handleRemoveLifeHistory = useCallback(
+    (idx: number) => {
+      const newHistory = data.lifeHistory.filter((_, i) => i !== idx);
+      onUpdate({ ...data, lifeHistory: newHistory });
+    },
+    [data, onUpdate],
+  );
 
   // -----------------------------------
   // 土地・ライフの操作UI（自分・相手共通）
@@ -161,13 +167,26 @@ const TurnRow: React.FC<TurnRowProps> = ({
         </button>
       </div>
 
-      {/* ライフ履歴 */}
-      <div className="flex items-center gap-1">
-        {lifeHistoryText && (
-          <span className="text-xs text-stone-500 truncate max-w-[5rem]" title={lifeHistoryText}>
-            {lifeHistoryText}
+      {/* ライフ履歴（個別 × ボタン付き） */}
+      <div className="flex flex-wrap items-center gap-0.5">
+        {data.lifeHistory.map((entry, idx) => (
+          <span
+            key={idx}
+            className="inline-flex items-center text-xs text-stone-500"
+          >
+            {/* → セパレーター（最初のエントリ以外に表示） */}
+            {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
+            {entry.life}
+            {/* × ボタン: このエントリだけ削除する */}
+            <button
+              onClick={() => handleRemoveLifeHistory(idx)}
+              title="この記録を削除"
+              className="text-stone-700 hover:text-stone-400 transition leading-none ml-0.5"
+            >
+              ×
+            </button>
           </span>
-        )}
+        ))}
         <button
           onClick={handleRecordLife}
           title="現在のライフを履歴に記録する"

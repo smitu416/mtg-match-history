@@ -197,6 +197,16 @@ export function MatchList() {
             <SortButton label="相手" field="opponentPlayerName" current={sort} onClick={handleSortChange} />
           </div>
 
+          {/* ヘッダー行 */}
+          <div className="grid grid-cols-[1fr_3rem_2.5rem_2.5rem_2.5rem_5rem] px-3 py-1 text-xs text-stone-600 border-b border-slate-800">
+            <span>対戦</span>
+            <span className="text-center">先攻</span>
+            <span className="text-center">G1</span>
+            <span className="text-center">G2</span>
+            <span className="text-center">G3</span>
+            <span></span>
+          </div>
+
           {/* 対戦カード一覧 */}
           {matches.map((match) => (
             <MatchCard
@@ -324,8 +334,18 @@ function GroupedMatchList({ matches, matchGroups, onEdit, onDelete }: GroupedMat
               <span className="text-xs text-stone-500 shrink-0">{groupMatches.length}件</span>
             </div>
 
+            {/* ヘッダー行（対戦 / 先攻 / G1 / G2 / G3 / 操作） */}
+            <div className="grid grid-cols-[1fr_3rem_2.5rem_2.5rem_2.5rem_5rem] px-3 py-1 text-xs text-stone-600 border-b border-slate-800">
+              <span>対戦</span>
+              <span className="text-center">先攻</span>
+              <span className="text-center">G1</span>
+              <span className="text-center">G2</span>
+              <span className="text-center">G3</span>
+              <span></span>
+            </div>
+
             {/* グループ内の対戦カード一覧 */}
-            <div className="p-3 space-y-2">
+            <div>
               {groupMatches.map((match) => (
                 <MatchCard
                   key={match.id}
@@ -353,11 +373,6 @@ interface MatchCardProps {
 }
 
 function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
-  // 試合の結果サマリー（G1/G2/G3）を表示用文字列に変換する
-  const gameSummary = [match.game1, match.game2, match.game3]
-    .map((g) => g.outcome)
-    .join(' / ');
-
   // 試合の勝敗（マッチ全体の結果）を計算する
   const wins = [match.game1, match.game2, match.game3].filter(
     (g) => g.outcome === '勝ち'
@@ -366,63 +381,71 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
     (g) => g.outcome === '負け'
   ).length;
 
-  // マッチ全体の勝ち負けで枠線の色を変える
+  // マッチ全体の勝ち負けで左枠線の色を変える
   const borderColor =
-    wins > losses ? 'border-l-green-500' : losses > wins ? 'border-l-red-500' : 'border-l-slate-600';
+    wins > losses ? 'border-l-green-600' : losses > wins ? 'border-l-red-700' : 'border-l-slate-600';
 
   return (
-    <div className={`bg-slate-900 rounded-xl border border-slate-700 border-l-4 ${borderColor} p-4`}>
-      {/* 上段: ID・デッキ情報・先攻後攻 */}
-      <div className="flex items-start justify-between">
-        <div>
-          {/* ID（小さく表示） */}
-          <span className="text-xs text-stone-500 font-mono">{match.id}</span>
+    // 1行グリッドレイアウト: [対戦] [先攻] [G1] [G2] [G3] [操作]
+    <div
+      className={`
+        grid grid-cols-[1fr_3rem_2.5rem_2.5rem_2.5rem_5rem]
+        items-center gap-1 px-3 py-2 border-l-4 ${borderColor}
+        hover:bg-slate-800/30 transition
+      `}
+    >
+      {/* 対戦の概要 */}
+      <span className="text-sm text-stone-100 truncate min-w-0">
+        {match.myDeck}
+        <span className="text-stone-500 mx-1 text-xs">vs</span>
+        {match.opponentDeck || '（不明）'}
+        <span className="text-stone-500 text-xs ml-1">({match.opponentPlayerName})</span>
+      </span>
 
-          {/* 対戦の概要 */}
-          <p className="font-semibold text-stone-100 mt-0.5">
-            {match.myDeck}
-            <span className="text-stone-500 mx-1 font-normal">vs</span>
-            {match.opponentPlayerName}
-            <span className="text-stone-400 text-sm font-normal ml-1">
-              （{match.opponentDeck}）
-            </span>
-          </p>
-        </div>
+      {/* 先攻/後攻 */}
+      <span className="text-xs text-stone-400 text-center">{match.playOrder}</span>
 
-        {/* 先攻/後攻バッジ */}
-        <span className={`
-          text-xs px-2 py-0.5 rounded-full font-medium shrink-0
-          ${match.playOrder === '先攻' ? 'border border-stone-600 text-stone-400' : 'border border-stone-600 text-stone-400'}
-        `}>
-          {match.playOrder}
-        </span>
-      </div>
+      {/* G1 / G2 / G3 の結果バッジ */}
+      <GameOutcomeBadge outcome={match.game1.outcome} />
+      <GameOutcomeBadge outcome={match.game2.outcome} />
+      <GameOutcomeBadge outcome={match.game3.outcome} />
 
-      {/* 下段: ゲーム結果とボタン */}
-      <div className="flex items-center justify-between mt-2">
-        {/* ゲーム結果サマリー */}
-        <span className="text-sm text-stone-400">{gameSummary}</span>
-
-        {/* 編集・削除ボタン */}
-        <div className="flex gap-2">
-          <button
-            onClick={onEdit}
-            className="text-xs px-2.5 py-1 border border-stone-600 text-stone-400
-                       rounded-lg hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
-          >
-            編集
-          </button>
-          <button
-            onClick={onDelete}
-            className="text-xs px-2.5 py-1 border border-stone-700 text-stone-500
-                       rounded-lg hover:bg-slate-800 hover:text-red-400 hover:border-red-800 transition"
-          >
-            削除
-          </button>
-        </div>
+      {/* 編集・削除ボタン */}
+      <div className="flex gap-1 justify-end">
+        <button
+          onClick={onEdit}
+          className="text-xs px-2 py-0.5 border border-stone-600 text-stone-400
+                     rounded hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
+        >
+          編集
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-xs px-2 py-0.5 border border-slate-700 text-stone-500
+                     rounded hover:bg-slate-800 hover:text-red-400 hover:border-red-800 transition"
+        >
+          削除
+        </button>
       </div>
     </div>
   );
+}
+
+// ===================================
+// サブコンポーネント: ゲーム結果バッジ
+// ===================================
+// 勝ち=緑, 負け=赤, ー=グレー
+type GameOutcome = '勝ち' | '負け' | 'ー';
+
+function GameOutcomeBadge({ outcome }: { outcome: GameOutcome | string }) {
+  // 結果ごとにスタイルを切り替える
+  const styleMap: Record<string, string> = {
+    '勝ち': 'text-green-400 font-semibold',
+    '負け': 'text-red-400 font-semibold',
+    'ー': 'text-stone-600',
+  };
+  const style = styleMap[outcome] ?? 'text-stone-600';
+  return <span className={`text-xs text-center ${style}`}>{outcome}</span>;
 }
 
 // ===================================
