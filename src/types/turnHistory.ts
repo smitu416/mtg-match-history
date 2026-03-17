@@ -84,17 +84,29 @@ export const createDefaultPlayerTurnData = (prevLife = 20, prevLand = 0): Player
 
 // -----------------------------------
 // デフォルトのターンデータを生成するヘルパー関数
-// ターンを新規追加するときに呼ばれる。前のターンのland/lifeを引き継ぐ。
+// ターンを新規追加するときに呼ばれる。
+// 前のターンのライフ履歴の「最後に記録された値」を引き継ぐ。
+// 履歴がなければ現在のライフ値を使う。
 // -----------------------------------
 export const createDefaultTurnData = (
   turnNumber: number,
   prevMyData?: PlayerTurnData,
   prevOpponentData?: PlayerTurnData,
-): TurnData => ({
-  turnNumber,
-  my: createDefaultPlayerTurnData(prevMyData?.life ?? 20, prevMyData?.land ?? 0),
-  opponent: createDefaultPlayerTurnData(prevOpponentData?.life ?? 20, prevOpponentData?.land ?? 0),
-});
+): TurnData => {
+  // 前ターンのライフ履歴の最後のエントリ、なければ現在値を返すヘルパー
+  const getLastLife = (data?: PlayerTurnData, fallback = 20): number => {
+    if (!data) return fallback;
+    const history = data.lifeHistory;
+    if (history.length > 0) return history[history.length - 1].life;
+    return data.life;
+  };
+
+  return {
+    turnNumber,
+    my: createDefaultPlayerTurnData(getLastLife(prevMyData), prevMyData?.land ?? 0),
+    opponent: createDefaultPlayerTurnData(getLastLife(prevOpponentData), prevOpponentData?.land ?? 0),
+  };
+};
 
 // -----------------------------------
 // デフォルトの10ターン分のデータを生成するヘルパー関数

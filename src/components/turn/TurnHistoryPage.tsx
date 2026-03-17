@@ -1,17 +1,19 @@
 // ==========================================
 // TurnHistoryPage コンポーネント
 // ==========================================
-// 「＋ 新規入力」から開く、ターン履歴記録のメイン画面。
+// 「＋ 新規入力」または「編集」から開く、ターン履歴記録のメイン画面。
+// initialMatch が渡された場合は編集モード、なければ新規作成モード。
 //
 // 画面構成:
 // 1. ヘッダー（基本情報入力: 自分のデッキ・相手プレイヤー・相手デッキ）
-// 2. ゲームタブ（G1 / G2 / G3）+ 先攻後攻トグル
+// 2. ゲームタブ（G1 / G2 / G3）+ 先攻後攻トグル + 勝敗ボタン
 // 3. デッキリスト + カードボタンパネル（横スクロール、上部固定）
-// 4. 2カラムグリッド（自分 / 相手）← 同期スクロール
+// 4. 2カラムグリッド（自分 / 相手）← 単一スクロール
 // 5. ターン増減ボタン
 
-import React, { useState, useCallback, useRef } from 'react';
-import type { PlayOrder } from '../../types';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import type { Match, PlayOrder } from '../../types';
+import type { GameOutcome } from '../../types';
 import {
   type TurnData,
   type GameSession,
@@ -19,18 +21,20 @@ import {
   createDefaultTurns,
   createDefaultTurnData,
 } from '../../types/turnHistory';
-import { saveGameSession } from '../../hooks/useGameSessions';
+import { saveGameSession, useGameSessionsByMatchId } from '../../hooks/useGameSessions';
 import { addMatchToGroup } from '../../hooks/useMatchGroups';
-import { addMatch } from '../../hooks/useMatches';
+import { addMatch, updateMatch } from '../../hooks/useMatches';
 import { useMyDeckNames, useOpponentPlayerNames, useOpponentDeckNames } from '../../hooks/useDecks';
+import AutocompleteInput from '../AutocompleteInput';
 import TurnRow from './TurnRow';
 
 // -----------------------------------
 // このコンポーネントが受け取るプロパティの型
 // -----------------------------------
 interface TurnHistoryPageProps {
-  onSave: () => void;    // 保存完了後に呼ばれる（一覧に戻るなど）
-  onCancel: () => void;  // キャンセルして一覧に戻るとき
+  onSave: () => void;          // 保存完了後に呼ばれる（一覧に戻るなど）
+  onCancel: () => void;        // キャンセルして一覧に戻るとき
+  initialMatch?: Match;        // 編集対象の試合（undefined = 新規作成）
 }
 
 // -----------------------------------
@@ -55,18 +59,25 @@ const createInitialGameState = (): GameState => ({
 });
 
 // -----------------------------------
-// デッキリストをパースするヘルパー関数
-// 入力例: "4 稲妻\n24 山\n4 渦まく知識"
-// 出力例: ["稲妻", "山", "渦まく知識"] （重複なし）
+// デッキリストをパースしてカード名一覧を返すヘルパー関数
+// 入力例: "4 稲妻\n24 山\n渦まく知識" （数字なしにも対応）
+// 出力例: ["稲妻", "山", "渦まく知識"]（重複なし）
 // -----------------------------------
 const parseCardList = (raw: string): string[] => {
   const names = raw
     .split('\n')
     .map((line) => {
-      const match = line.trim().match(/^\d+\s+(.+)$/);
-      return match ? match[1].trim() : null;
+      const trimmed = line.trim();
+      if (!trimmed) return null;
+      // 「数字 スペース カード名」の形式にマッチする場合はカード名だけ取り出す
+      const match = trimmed.match(/^\d+\s+(.+)$/);
+      if (match) return match[1].trim();
+      // 数字なし（カード名だけ）の場合はそのまま使用する
+      return trimmed;
     })
-    .filter((name): name is string => name !== null);
+    .filter((name): name is string => name !== null && name.length > 0);
+
+  // Set で重複を除去する
   return [...new Set(names)];
 };
 
@@ -76,15 +87,23 @@ const parseCardList = (raw: string): string[] => {
 const OPPONENT_ACTIONS = ['クリーチャー', '呪文', '除去'] as const;
 
 // -----------------------------------
+// 勝敗ボタンの定義
+// -----------------------------------
+const OUTCOMES: GameOutcome[] = ['勝ち', '負け', 'ー'];
+
+// -----------------------------------
 // TurnHistoryPage コンポーネント
 // -----------------------------------
-const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) => {
+const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, initialMatch }) => {
+  // 編集モードかどうか
+  const isEditMode = Boolean(initialMatch);
+
   // -----------------------------------
   // 基本情報（ヘッダー部分）の状態
   // -----------------------------------
-  const [myDeck, setMyDeck] = useState('');
-  const [opponentPlayerName, setOpponentPlayerName] = useState('');
-  const [opponentDeck, setOpponentDeck] = useState('');
+  const [myDeck, setMyDeck] = useState(initialMatch?.myDeck ?? '');
+  const [opponentPlayerName, setOpponentPlayerName] = useState(initialMatch?.opponentPlayerName ?? '');
+  const [opponentDeck, setOpponentDeck] = useState(initialMatch?.opponentDeck ?? '');
 
   // -----------------------------------
   // datalist 候補（過去の入力から自動収集）
@@ -95,14 +114,9 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
 
   // -----------------------------------
   // デッキリスト（G1〜G3 共通）
-  // カードボタンを生成するために使う。
   // -----------------------------------
   const [cardListRaw, setCardListRaw] = useState('');
-
-  // デッキリスト表示/非表示の折りたたみ状態
   const [showCardList, setShowCardList] = useState(true);
-
-  // デッキリストをパースしたカード名一覧
   const cardNames = parseCardList(cardListRaw);
 
   // -----------------------------------
@@ -120,9 +134,16 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
   });
 
   // -----------------------------------
+  // G1/G2/G3 それぞれの勝敗
+  // -----------------------------------
+  const [gameOutcomes, setGameOutcomes] = useState<Record<1 | 2 | 3, GameOutcome>>({
+    1: initialMatch?.game1.outcome ?? 'ー',
+    2: initialMatch?.game2.outcome ?? 'ー',
+    3: initialMatch?.game3.outcome ?? 'ー',
+  });
+
+  // -----------------------------------
   // 現在アクティブなAction欄のID
-  // 例: "g1-t3-my" = G1の3ターン目の自分のAction欄
-  // null = どのAction欄もアクティブでない
   // -----------------------------------
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
@@ -132,38 +153,37 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
   const [isSaving, setIsSaving] = useState(false);
 
   // -----------------------------------
-  // 同期スクロール用の ref
-  // leftColRef / rightColRef: 各列の scroll コンテナ
-  // isSyncingRef: スクロールイベントが無限ループしないようにするフラグ
+  // 編集モード: 既存のGameSessionをDBから取得する
   // -----------------------------------
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const rightColRef = useRef<HTMLDivElement>(null);
-  const isSyncingRef = useRef(false);
+  const existingSessions = useGameSessionsByMatchId(initialMatch?.id ?? '');
 
   // -----------------------------------
-  // 左列がスクロールされたとき → 右列を同じ位置に合わせる
+  // 編集モード: セッションが読み込まれたら state を初期化する
+  // hasInitialized で2回目以降の実行を防ぐ
   // -----------------------------------
-  const handleLeftScroll = useCallback(() => {
-    // isSyncingRef が true の場合は右→左の同期中なのでスキップ（無限ループ防止）
-    if (isSyncingRef.current) return;
-    isSyncingRef.current = true;
-    if (rightColRef.current && leftColRef.current) {
-      rightColRef.current.scrollTop = leftColRef.current.scrollTop;
-    }
-    isSyncingRef.current = false;
-  }, []);
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (!initialMatch || !existingSessions || hasInitialized.current) return;
+    hasInitialized.current = true;
 
-  // -----------------------------------
-  // 右列がスクロールされたとき → 左列を同じ位置に合わせる
-  // -----------------------------------
-  const handleRightScroll = useCallback(() => {
-    if (isSyncingRef.current) return;
-    isSyncingRef.current = true;
-    if (leftColRef.current && rightColRef.current) {
-      leftColRef.current.scrollTop = rightColRef.current.scrollTop;
+    // G1 セッションからカードリストを復元する
+    const g1Session = existingSessions.find((s) => s.gameNumber === 1);
+    if (g1Session) setCardListRaw(g1Session.cardListRaw);
+
+    // 各ゲームの turns と playOrder を復元する
+    if (existingSessions.length > 0) {
+      setGameStates((prev) => {
+        const next = { ...prev };
+        for (const session of existingSessions) {
+          next[session.gameNumber] = {
+            playOrder: session.playOrder,
+            turns: session.turns,
+          };
+        }
+        return next;
+      });
     }
-    isSyncingRef.current = false;
-  }, []);
+  }, [initialMatch, existingSessions]);
 
   // -----------------------------------
   // 現在のゲーム状態を取得するヘルパー
@@ -194,21 +214,20 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
   }, [updateCurrentGame]);
 
   // -----------------------------------
-  // Action欄をアクティブ化する
-  // すでにアクティブな場合は非アクティブにする（トグル）
+  // Action欄をアクティブ化する（トグル）
   // -----------------------------------
-  const handleActivateField = useCallback((fieldId: string) => {
-    setActiveFieldId((prev) => (prev === fieldId ? null : fieldId));
+  const handleActivateField = useCallback((fId: string) => {
+    setActiveFieldId((prev) => (prev === fId ? null : fId));
   }, []);
 
   // -----------------------------------
-  // アクティブなAction欄のインデックスを取得するヘルパー
+  // fieldId をパースして turnIndex と side を取り出す
   // fieldId 形式: "g{gameNum}-t{turnIndex}-{side}"
   // -----------------------------------
   const parseFieldId = (
-    fieldId: string,
+    fId: string,
   ): { turnIndex: number; side: 'my' | 'opponent' } | null => {
-    const matchResult = fieldId.match(/^g\d+-t(\d+)-(my|opponent)$/);
+    const matchResult = fId.match(/^g\d+-t(\d+)-(my|opponent)$/);
     if (!matchResult) return null;
     return { turnIndex: parseInt(matchResult[1], 10), side: matchResult[2] as 'my' | 'opponent' };
   };
@@ -232,10 +251,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
       updateCurrentGame((g) => {
         const newTurns = g.turns.map((t, i) => {
           if (i !== turnIndex) return t;
-          return {
-            ...t,
-            [side]: { ...t[side], actions: [...t[side].actions, newChip] },
-          };
+          return { ...t, [side]: { ...t[side], actions: [...t[side].actions, newChip] } };
         });
         return { ...g, turns: newTurns };
       });
@@ -264,8 +280,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
   );
 
   // -----------------------------------
-  // ターンを追加する（末尾に1ターン追加）
-  // 前のターンの土地・ライフを引き継ぐ
+  // ターンを追加する（末尾に1ターン追加、前のターンの値を引き継ぐ）
   // -----------------------------------
   const handleAddTurn = useCallback(() => {
     updateCurrentGame((g) => {
@@ -276,8 +291,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
   }, [updateCurrentGame]);
 
   // -----------------------------------
-  // ターンを削除する（末尾から1ターン削除）
-  // 最低1ターンは残す
+  // ターンを削除する（末尾から1ターン削除、最低1ターン残す）
   // -----------------------------------
   const handleRemoveTurn = useCallback(() => {
     updateCurrentGame((g) => {
@@ -288,9 +302,8 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
 
   // -----------------------------------
   // 保存処理
-  // 1. Matchレコードを作成する
-  // 2. G1/G2/G3 の GameSession を保存する（cardListRaw は共通）
-  // 3. MatchGroup に追加する
+  // 新規: addMatch → saveGameSession × 3 → addMatchToGroup
+  // 編集: updateMatch → saveGameSession × 3（同IDで上書き）
   // -----------------------------------
   const handleSave = async () => {
     if (!myDeck.trim() || !opponentPlayerName.trim()) return;
@@ -299,17 +312,38 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
-      const matchId = await addMatch({
-        myDeck: myDeck.trim(),
-        opponentPlayerName: opponentPlayerName.trim(),
-        opponentDeck: opponentDeck.trim(),
-        playOrder: gameStates[1].playOrder, // G1の先攻後攻をデフォルトとして使用
-        game1: { outcome: 'ー', notes: '' },
-        game2: { outcome: 'ー', notes: '' },
-        game3: { outcome: 'ー', notes: '' },
-      });
 
-      // 各ゲームの GameSession を保存する（カードリストは共通）
+      let matchId: string;
+
+      if (isEditMode && initialMatch) {
+        // ===== 編集モード: Match を更新する =====
+        matchId = initialMatch.id;
+        await updateMatch({
+          ...initialMatch,
+          myDeck: myDeck.trim(),
+          opponentPlayerName: opponentPlayerName.trim(),
+          opponentDeck: opponentDeck.trim(),
+          playOrder: gameStates[1].playOrder,
+          game1: { ...initialMatch.game1, outcome: gameOutcomes[1] },
+          game2: { ...initialMatch.game2, outcome: gameOutcomes[2] },
+          game3: { ...initialMatch.game3, outcome: gameOutcomes[3] },
+        });
+      } else {
+        // ===== 新規作成モード: Match を作成する =====
+        matchId = await addMatch({
+          myDeck: myDeck.trim(),
+          opponentPlayerName: opponentPlayerName.trim(),
+          opponentDeck: opponentDeck.trim(),
+          playOrder: gameStates[1].playOrder,
+          game1: { outcome: gameOutcomes[1], notes: '' },
+          game2: { outcome: gameOutcomes[2], notes: '' },
+          game3: { outcome: gameOutcomes[3], notes: '' },
+        });
+        // MatchGroup に追加する（新規のみ）
+        await addMatchToGroup(matchId, now);
+      }
+
+      // G1/G2/G3 の GameSession を保存する（put で存在すれば上書き）
       for (const gameNum of GAME_NUMBERS) {
         const gs = gameStates[gameNum];
         const session: GameSession = {
@@ -317,14 +351,13 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
           matchId,
           gameNumber: gameNum,
           playOrder: gs.playOrder,
-          cardListRaw,   // G1〜G3 共通のカードリスト
+          cardListRaw,
           turns: gs.turns,
           createdAt: now,
         };
         await saveGameSession(session);
       }
 
-      await addMatchToGroup(matchId, now);
       onSave();
     } catch (err) {
       console.error('保存エラー:', err);
@@ -333,12 +366,13 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
     }
   };
 
-  // -----------------------------------
-  // アクティブなAction欄が現在のゲームに属するかを確認する
-  // カードボタンの有効/無効に使う
-  // -----------------------------------
+  // アクティブなAction欄が現在のゲームに属するかチェック（ボタン有効/無効に使う）
   const hasActiveField =
     activeFieldId !== null && activeFieldId.startsWith(`g${activeGame}-`);
+
+  // 入力欄の共通スタイル
+  const inputClass =
+    'w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-stone-500';
 
   return (
     <div className="flex flex-col h-full gap-2">
@@ -346,7 +380,9 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
       {/* ===== ヘッダー: 基本情報入力 ===== */}
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-bold text-stone-200">新規対戦入力</h2>
+          <h2 className="text-sm font-bold text-stone-200">
+            {isEditMode ? '対戦編集' : '新規対戦入力'}
+          </h2>
           <div className="flex gap-2">
             <button
               onClick={onCancel}
@@ -364,60 +400,50 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
           </div>
         </div>
 
-        {/* 基本情報フォーム */}
+        {/* 基本情報フォーム（AutocompleteInput でカスタム補完） */}
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="block text-xs font-semibold text-stone-400 mb-0.5">
               自分のデッキ <span className="text-stone-600">*</span>
             </label>
-            {/* list="..." で datalist と紐付ける → 過去の入力候補が表示される */}
-            <input
-              list="my-deck-list"
+            <AutocompleteInput
               value={myDeck}
-              onChange={(e) => setMyDeck(e.target.value)}
+              onChange={setMyDeck}
+              suggestions={myDeckNames}
               placeholder="例: ピナクル"
-              className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+              className={inputClass}
             />
-            <datalist id="my-deck-list">
-              {myDeckNames.map((n) => <option key={n} value={n} />)}
-            </datalist>
           </div>
           <div>
             <label className="block text-xs font-semibold text-stone-400 mb-0.5">
               相手プレイヤー <span className="text-stone-600">*</span>
             </label>
-            <input
-              list="opponent-player-list"
+            <AutocompleteInput
               value={opponentPlayerName}
-              onChange={(e) => setOpponentPlayerName(e.target.value)}
+              onChange={setOpponentPlayerName}
+              suggestions={opponentPlayerNames}
               placeholder="例: まさっち"
-              className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+              className={inputClass}
             />
-            <datalist id="opponent-player-list">
-              {opponentPlayerNames.map((n) => <option key={n} value={n} />)}
-            </datalist>
           </div>
           <div>
             <label className="block text-xs font-semibold text-stone-400 mb-0.5">
               相手デッキ
             </label>
-            <input
-              list="opponent-deck-list"
+            <AutocompleteInput
               value={opponentDeck}
-              onChange={(e) => setOpponentDeck(e.target.value)}
+              onChange={setOpponentDeck}
+              suggestions={opponentDeckNames}
               placeholder="例: カニL/O"
-              className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-stone-500"
+              className={inputClass}
             />
-            <datalist id="opponent-deck-list">
-              {opponentDeckNames.map((n) => <option key={n} value={n} />)}
-            </datalist>
           </div>
         </div>
       </div>
 
-      {/* ===== ゲームタブ（G1 / G2 / G3）+ 先攻後攻トグル ===== */}
-      <div className="flex items-center gap-2">
-        {/* タブ */}
+      {/* ===== ゲームタブ + 先攻後攻 + 勝敗入力 ===== */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* G1/G2/G3 タブ */}
         <div className="flex gap-0.5 bg-slate-900 rounded-lg border border-slate-700 p-0.5">
           {GAME_NUMBERS.map((num) => (
             <button
@@ -437,7 +463,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
           ))}
         </div>
 
-        {/* 先攻後攻 */}
+        {/* 先攻後攻トグル */}
         <button
           onClick={togglePlayOrder}
           className={`
@@ -451,11 +477,39 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
         >
           G{activeGame}: {currentGame.playOrder}
         </button>
+
+        {/* 勝敗入力（勝ち / 負け / ー）*/}
+        <div className="flex gap-1 ml-auto">
+          {OUTCOMES.map((outcome) => {
+            const isSelected = gameOutcomes[activeGame] === outcome;
+            const selectedStyle =
+              outcome === '勝ち'
+                ? 'border-green-600 text-green-400 bg-green-900/20'
+                : outcome === '負け'
+                  ? 'border-red-700 text-red-400 bg-red-900/20'
+                  : 'border-stone-500 text-stone-200 bg-slate-800';
+            return (
+              <button
+                key={outcome}
+                onClick={() => setGameOutcomes((prev) => ({ ...prev, [activeGame]: outcome }))}
+                className={`
+                  text-xs px-2.5 py-1 rounded border transition
+                  ${
+                    isSelected
+                      ? selectedStyle
+                      : 'border-slate-700 text-stone-500 hover:border-slate-600 hover:text-stone-400'
+                  }
+                `}
+              >
+                {outcome}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ===== デッキリスト + カードボタンパネル（上部横長固定） ===== */}
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-2">
-
         {/* デッキリスト折りたたみ */}
         <button
           onClick={() => setShowCardList((prev) => !prev)}
@@ -469,15 +523,14 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
           <textarea
             value={cardListRaw}
             onChange={(e) => setCardListRaw(e.target.value)}
-            placeholder={'4 稲妻\n4 渦まく知識\n24 山'}
+            placeholder={'4 稲妻\n4 渦まく知識\n稲妻 （数字なしも可）'}
             rows={4}
             className="w-full bg-slate-800 text-stone-300 border border-slate-700 rounded-lg p-2 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-stone-500 placeholder-slate-600 font-mono"
           />
         )}
 
-        {/* カードボタン + 相手行動ボタン（横スクロール） */}
+        {/* カードボタン + 相手行動ボタン */}
         <div className="flex items-start gap-2 mt-1.5">
-
           {/* 自分のカードボタン（横スクロール） */}
           <div className="flex-1 min-w-0 overflow-x-auto">
             {cardNames.length > 0 ? (
@@ -502,12 +555,14 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
               </div>
             ) : (
               <p className="text-xs text-stone-600 py-1">
-                {showCardList ? 'デッキリストを入力するとボタンが表示されます' : 'デッキリストを開いてカードを入力'}
+                {showCardList
+                  ? 'デッキリストを入力するとボタンが表示されます（数字なしも可）'
+                  : 'デッキリストを開いてカードを入力'}
               </p>
             )}
           </div>
 
-          {/* 相手行動ボタン（右端、縦並び） */}
+          {/* 相手行動ボタン（右端） */}
           <div className="flex gap-1 shrink-0">
             {OPPONENT_ACTIONS.map((action) => (
               <button
@@ -529,7 +584,6 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
           </div>
         </div>
 
-        {/* アクティブフィールドがない時のヒント */}
         {!hasActiveField && (
           <p className="text-xs text-stone-700 mt-1">
             Action欄をタップして有効化するとボタンが使えます
@@ -537,16 +591,12 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
         )}
       </div>
 
-      {/* ===== 2カラム: 自分のターン列 / 相手のターン列（同期スクロール） ===== */}
-      <div className="flex gap-2 flex-1 min-h-0">
+      {/* ===== 2カラム: 自分のターン列 / 相手のターン列（単一スクロール） ===== */}
+      {/* 1つの overflow-y-auto コンテナで両列をまとめて管理する */}
+      <div className="flex gap-2 flex-1 min-h-0 overflow-y-auto">
 
         {/* ----- 左列: 自分のターン ----- */}
-        <div
-          ref={leftColRef}
-          onScroll={handleLeftScroll}
-          className="flex-1 min-w-0 flex flex-col gap-1 overflow-y-auto"
-        >
-          {/* ヘッダー行（sticky で常に見える） */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
           <p className="text-xs font-semibold text-stone-400 sticky top-0 bg-slate-950 py-1 z-10">
             自分
           </p>
@@ -566,11 +616,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel }) =
         </div>
 
         {/* ----- 右列: 相手のターン ----- */}
-        <div
-          ref={rightColRef}
-          onScroll={handleRightScroll}
-          className="flex-1 min-w-0 flex flex-col gap-1 overflow-y-auto"
-        >
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
           <p className="text-xs font-semibold text-stone-400 sticky top-0 bg-slate-950 py-1 text-right z-10">
             相手
           </p>

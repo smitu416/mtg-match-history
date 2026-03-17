@@ -16,14 +16,20 @@ import type { Match, FilterOptions, SortOptions, SortField } from '../../types';
 // -----------------------------------
 // MatchList コンポーネント本体
 // -----------------------------------
-export function MatchList() {
+// onEditMatch が渡されると、編集ボタン押下時に外部コールバックを呼ぶ。
+// 渡されない場合は内部の MatchForm にフォールバックする（後方互換性のため）。
+interface MatchListProps {
+  onEditMatch?: (match: Match) => void;
+}
+
+export function MatchList({ onEditMatch }: MatchListProps = {}) {
   // ===================================
   // フィルター・ソートの状態
   // ===================================
   const [filter, setFilter] = useState<FilterOptions>({});
   const [sort, setSort] = useState<SortOptions>({ field: 'id', order: 'desc' });
 
-  // 編集中の対戦データ（nullなら編集モードでない）
+  // 編集中の対戦データ（onEditMatch が渡されない場合のみ使用）
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
 
   // -----------------------------------
@@ -80,7 +86,20 @@ export function MatchList() {
   };
 
   // -----------------------------------
-  // 編集モードのとき MatchForm を表示する
+  // 編集ハンドラー
+  // onEditMatch が渡されている → App.tsx に委譲して TurnHistoryPage を開く
+  // 渡されていない → 内部の MatchForm を表示（後方互換）
+  // -----------------------------------
+  const handleEdit = (match: Match) => {
+    if (onEditMatch) {
+      onEditMatch(match);
+    } else {
+      setEditingMatch(match);
+    }
+  };
+
+  // -----------------------------------
+  // 内部フォールバック: editingMatch がある場合は MatchForm を表示する
   // -----------------------------------
   if (editingMatch) {
     return (
@@ -212,7 +231,7 @@ export function MatchList() {
             <MatchCard
               key={match.id}
               match={match}
-              onEdit={() => setEditingMatch(match)}
+              onEdit={() => handleEdit(match)}
               onDelete={() => handleDelete(match)}
             />
           ))}

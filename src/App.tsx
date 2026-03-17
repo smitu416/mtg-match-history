@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { MatchList } from './components/match/MatchList';
 import { MatchForm } from './components/match/MatchForm';
+import type { Match } from './types';
 import { PlayerStats } from './components/stats/PlayerStats';
 import { DeckStats, DeckDetailStats } from './components/stats/DeckStats';
 import { OverallStats } from './components/stats/OverallStats';
@@ -29,6 +30,9 @@ function App() {
 
   // CSVインポートモーダルを表示するかどうか
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // 編集中の対戦データ（TurnHistoryPage に渡す）
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
 
   // ===================================
   // 表示部分（JSX）
@@ -55,7 +59,7 @@ function App() {
 
             {/* 新規入力ボタン（クリックするとターン履歴入力ページに遷移） */}
             <button
-              onClick={() => setCurrentPage('turn-history')}
+              onClick={() => { setEditingMatch(null); setCurrentPage('turn-history'); }}
               className="border border-stone-500 text-stone-200 font-semibold px-4 py-1.5 rounded-lg
                          text-sm hover:bg-slate-800 hover:border-stone-300 transition"
             >
@@ -86,7 +90,14 @@ function App() {
       <main className={currentPage === 'turn-history' ? 'px-3 py-3 h-[calc(100vh-7rem)] flex flex-col' : 'max-w-2xl mx-auto px-4 py-5'}>
 
         {/* 対戦一覧ページ */}
-        {currentPage === 'list' && <MatchList />}
+        {currentPage === 'list' && (
+          <MatchList
+            onEditMatch={(match) => {
+              setEditingMatch(match);
+              setCurrentPage('turn-history');
+            }}
+          />
+        )}
 
         {/* 新規入力ページ（旧 MatchForm: 簡易入力用に残す） */}
         {currentPage === 'new' && (
@@ -96,11 +107,12 @@ function App() {
           />
         )}
 
-        {/* ターン履歴入力ページ（「＋ 新規入力」ボタンから遷移） */}
+        {/* ターン履歴入力ページ（新規 or 編集） */}
         {currentPage === 'turn-history' && (
           <TurnHistoryPage
-            onSave={() => setCurrentPage('list')}
-            onCancel={() => setCurrentPage('list')}
+            initialMatch={editingMatch ?? undefined}
+            onSave={() => { setCurrentPage('list'); setEditingMatch(null); }}
+            onCancel={() => { setCurrentPage('list'); setEditingMatch(null); }}
           />
         )}
 

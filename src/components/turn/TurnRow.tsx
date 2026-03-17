@@ -4,9 +4,10 @@
 // 1ターン分の行を表示するコンポーネント。
 // 自分側と相手側それぞれで使い回す。
 //
-// 1行の構成:
-// [ターン番号] [Action欄（チップ表示）] [土地 −/数値/+]
-// [ライフ −/数値/+] [履歴: 20→18] [記録ボタン]
+// レイアウト（1ターン = 2段構成）:
+// 上段: [ターン番号] [Action欄（チップ + フリー入力）] [土地 −/数/+] [ライフ −/数/+]
+// 下段:             [ライフ履歴: 20→18→15 × × ×] [記録ボタン]
+// ※ ライフ履歴を下段に分離することで、Action欄の幅が変動しないようにする
 
 import React, { useCallback } from 'react';
 import type { ActionChip, PlayerTurnData } from '../../types/turnHistory';
@@ -40,7 +41,6 @@ const TurnRow: React.FC<TurnRowProps> = ({
 }) => {
   // -----------------------------------
   // チップを追加する処理
-  // 外部（CardButtonPanel）から ActionChipField 経由で呼ばれる
   // -----------------------------------
   const handleAddChip = useCallback(
     (chip: ActionChip) => {
@@ -64,7 +64,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
   // -----------------------------------
   const handleLandChange = useCallback(
     (delta: number) => {
-      const newLand = Math.max(0, data.land + delta); // 0以下にはならないようにする
+      const newLand = Math.max(0, data.land + delta);
       onUpdate({ ...data, land: newLand });
     },
     [data, onUpdate],
@@ -73,7 +73,6 @@ const TurnRow: React.FC<TurnRowProps> = ({
   const handleLandInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = parseInt(e.target.value, 10);
-      // 数値でない場合や負の値は 0 にする
       onUpdate({ ...data, land: isNaN(val) || val < 0 ? 0 : val });
     },
     [data, onUpdate],
@@ -117,91 +116,95 @@ const TurnRow: React.FC<TurnRowProps> = ({
   );
 
   // -----------------------------------
-  // 土地・ライフの操作UI（自分・相手共通）
+  // 土地コントロール（上段に表示）
   // -----------------------------------
-  const landLifeControls = (
-    <div className="flex flex-col gap-1 shrink-0">
-      {/* 土地 */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-stone-500 w-4">🌲</span>
-        <button
-          onClick={() => handleLandChange(-1)}
-          className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
-        >
-          −
-        </button>
-        <input
-          type="number"
-          value={data.land}
-          onChange={handleLandInput}
-          className="w-8 bg-slate-800 text-stone-200 text-xs text-center border border-slate-700 rounded px-0.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-stone-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        />
-        <button
-          onClick={() => handleLandChange(1)}
-          className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
-        >
-          ＋
-        </button>
-      </div>
+  const landControl = (
+    <div className="flex items-center gap-0.5 shrink-0">
+      <span className="text-xs text-stone-500 w-3.5 leading-none">🌲</span>
+      <button
+        onClick={() => handleLandChange(-1)}
+        className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
+      >
+        −
+      </button>
+      <input
+        type="number"
+        value={data.land}
+        onChange={handleLandInput}
+        className="w-7 bg-slate-800 text-stone-200 text-xs text-center border border-slate-700 rounded px-0 py-0.5 focus:outline-none focus:ring-1 focus:ring-stone-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      />
+      <button
+        onClick={() => handleLandChange(1)}
+        className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
+      >
+        ＋
+      </button>
+    </div>
+  );
 
-      {/* ライフ */}
-      <div className="flex items-center gap-1">
-        <span className="text-xs text-stone-500 w-4">❤</span>
-        <button
-          onClick={() => handleLifeChange(-1)}
-          className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
-        >
-          −
-        </button>
-        <input
-          type="number"
-          value={data.life}
-          onChange={handleLifeInput}
-          className="w-8 bg-slate-800 text-stone-200 text-xs text-center border border-slate-700 rounded px-0.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-stone-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        />
-        <button
-          onClick={() => handleLifeChange(1)}
-          className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
-        >
-          ＋
-        </button>
-      </div>
+  // -----------------------------------
+  // ライフコントロール（上段に表示）
+  // -----------------------------------
+  const lifeControl = (
+    <div className="flex items-center gap-0.5 shrink-0">
+      <span className="text-xs text-stone-500 w-3.5 leading-none">❤</span>
+      <button
+        onClick={() => handleLifeChange(-1)}
+        className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
+      >
+        −
+      </button>
+      <input
+        type="number"
+        value={data.life}
+        onChange={handleLifeInput}
+        className="w-7 bg-slate-800 text-stone-200 text-xs text-center border border-slate-700 rounded px-0 py-0.5 focus:outline-none focus:ring-1 focus:ring-stone-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      />
+      <button
+        onClick={() => handleLifeChange(1)}
+        className="w-5 h-5 flex items-center justify-center rounded border border-slate-700 text-stone-400 hover:bg-slate-700 hover:text-stone-200 text-xs transition"
+      >
+        ＋
+      </button>
+    </div>
+  );
 
-      {/* ライフ履歴（個別 × ボタン付き） */}
-      <div className="flex flex-wrap items-center gap-0.5">
-        {data.lifeHistory.map((entry, idx) => (
-          <span
-            key={idx}
-            className="inline-flex items-center text-xs text-stone-500"
+  // -----------------------------------
+  // ライフ履歴の下段（flex-wrap で幅が足りなければ改行する）
+  // 個別 × ボタン + 記録ボタン
+  // -----------------------------------
+  const lifeHistoryRow = (
+    <div className="flex flex-wrap items-center gap-0.5">
+      {data.lifeHistory.map((entry, idx) => (
+        <span key={idx} className="inline-flex items-center text-xs text-stone-500">
+          {/* → 区切り（最初のエントリ以外に表示） */}
+          {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
+          {entry.life}
+          {/* このエントリを削除するボタン */}
+          <button
+            onClick={() => handleRemoveLifeHistory(idx)}
+            title="この記録を削除"
+            className="text-stone-700 hover:text-stone-400 transition leading-none ml-0.5"
           >
-            {/* → セパレーター（最初のエントリ以外に表示） */}
-            {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
-            {entry.life}
-            {/* × ボタン: このエントリだけ削除する */}
-            <button
-              onClick={() => handleRemoveLifeHistory(idx)}
-              title="この記録を削除"
-              className="text-stone-700 hover:text-stone-400 transition leading-none ml-0.5"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <button
-          onClick={handleRecordLife}
-          title="現在のライフを履歴に記録する"
-          className="text-xs px-1.5 py-0.5 border border-slate-700 text-stone-500 rounded hover:bg-slate-700 hover:text-stone-300 hover:border-stone-600 transition whitespace-nowrap"
-        >
-          記録
-        </button>
-      </div>
+            ×
+          </button>
+        </span>
+      ))}
+      {/* 現在のライフ値を履歴に追記するボタン */}
+      <button
+        onClick={handleRecordLife}
+        title="現在のライフを履歴に記録する"
+        className="text-xs px-1.5 py-0.5 border border-slate-700 text-stone-500 rounded hover:bg-slate-700 hover:text-stone-300 hover:border-stone-600 transition whitespace-nowrap"
+      >
+        記録
+      </button>
     </div>
   );
 
   return (
     <div
       className={`
-        flex items-start gap-2 p-2 rounded-lg border
+        flex flex-col gap-1 p-2 rounded-lg border
         ${isActive ? 'border-slate-600 bg-slate-900/60' : 'border-transparent'}
         transition-colors duration-150
       `}
@@ -209,50 +212,56 @@ const TurnRow: React.FC<TurnRowProps> = ({
       {/* ===== 自分側（左）レイアウト ===== */}
       {side === 'my' && (
         <>
-          {/* ターン番号 */}
-          <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
-            T{turnNumber}
-          </span>
-
-          {/* Action欄 */}
-          <div className="flex-1 min-w-0">
-            <ActionChipField
-              chips={data.actions}
-              isActive={isActive}
-              onActivate={() => onActivate(fieldId)}
-              onAddChip={handleAddChip}
-              onRemoveChip={handleRemoveChip}
-              placeholder="カードをタップして追加"
-            />
+          {/* 上段: [T番号] [Action欄] [土地] [ライフ] */}
+          <div className="flex items-start gap-1">
+            <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
+              T{turnNumber}
+            </span>
+            <div className="flex-1 min-w-0">
+              <ActionChipField
+                chips={data.actions}
+                isActive={isActive}
+                onActivate={() => onActivate(fieldId)}
+                onAddChip={handleAddChip}
+                onRemoveChip={handleRemoveChip}
+                placeholder="カードをタップして追加"
+              />
+            </div>
+            {landControl}
+            {lifeControl}
           </div>
-
-          {/* 土地・ライフ操作 */}
-          {landLifeControls}
+          {/* 下段: ライフ履歴（T番号の幅分インデント） */}
+          <div className="ml-7">
+            {lifeHistoryRow}
+          </div>
         </>
       )}
 
       {/* ===== 相手側（右）レイアウト ===== */}
       {side === 'opponent' && (
         <>
-          {/* 土地・ライフ操作（相手側は左に配置） */}
-          {landLifeControls}
-
-          {/* Action欄 */}
-          <div className="flex-1 min-w-0">
-            <ActionChipField
-              chips={data.actions}
-              isActive={isActive}
-              onActivate={() => onActivate(fieldId)}
-              onAddChip={handleAddChip}
-              onRemoveChip={handleRemoveChip}
-              placeholder="相手の行動を追加"
-            />
+          {/* 上段: [ライフ] [土地] [Action欄] [T番号] */}
+          <div className="flex items-start gap-1">
+            {lifeControl}
+            {landControl}
+            <div className="flex-1 min-w-0">
+              <ActionChipField
+                chips={data.actions}
+                isActive={isActive}
+                onActivate={() => onActivate(fieldId)}
+                onAddChip={handleAddChip}
+                onRemoveChip={handleRemoveChip}
+                placeholder="相手の行動を追加"
+              />
+            </div>
+            <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
+              T{turnNumber}
+            </span>
           </div>
-
-          {/* ターン番号（相手側は右に配置） */}
-          <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
-            T{turnNumber}
-          </span>
+          {/* 下段: ライフ履歴（T番号の幅分インデント） */}
+          <div className="mr-7">
+            {lifeHistoryRow}
+          </div>
         </>
       )}
     </div>
