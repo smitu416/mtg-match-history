@@ -213,30 +213,36 @@ const TurnRow: React.FC<TurnRowProps> = ({
   );
 
   // -----------------------------------
-  // ライフ履歴の下段（flex-wrap で幅が足りなければ改行する）
+  // ライフ履歴の下段
+  // レイアウト: [記録ボタン（左固定）] [履歴エントリ（右側・flex-wrap）]
+  // 記録ボタンは shrink-0 で常に左端に固定される
   // -----------------------------------
   const lifeHistoryRow = (
-    <div className="flex flex-wrap items-center gap-0.5">
-      {data.lifeHistory.map((entry, idx) => (
-        <span key={idx} className="inline-flex items-center text-xs text-stone-500">
-          {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
-          {entry.life}
-          <button
-            onClick={() => handleRemoveLifeHistory(idx)}
-            title="この記録を削除"
-            className="text-stone-700 hover:text-stone-400 transition leading-none ml-0.5"
-          >
-            ×
-          </button>
-        </span>
-      ))}
+    <div className="flex items-start gap-1">
+      {/* 記録ボタン: 左端に固定（位置が変わらない） */}
       <button
         onClick={handleRecordLife}
         title="現在のライフを履歴に記録する"
-        className="text-xs px-1.5 py-0.5 border border-slate-700 text-stone-500 rounded hover:bg-slate-700 hover:text-stone-300 hover:border-stone-600 transition whitespace-nowrap"
+        className="text-xs px-1.5 py-0.5 border border-slate-700 text-stone-500 rounded hover:bg-slate-700 hover:text-stone-300 hover:border-stone-600 transition whitespace-nowrap shrink-0"
       >
         記録
       </button>
+      {/* 履歴エントリ: 右側に並べ、溢れたら折り返す */}
+      <div className="flex flex-wrap items-center gap-0.5">
+        {data.lifeHistory.map((entry, idx) => (
+          <span key={idx} className="inline-flex items-center text-xs text-stone-500">
+            {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
+            {entry.life}
+            <button
+              onClick={() => handleRemoveLifeHistory(idx)}
+              title="この記録を削除"
+              className="text-stone-700 hover:text-stone-400 transition leading-none ml-0.5"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
     </div>
   );
 

@@ -210,14 +210,17 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
   );
 
   // -----------------------------------
-  // 先攻/後攻トグル
+  // 指定ゲームの先攻/後攻トグル（G1/G2/G3 独立して切り替え可能）
   // -----------------------------------
-  const togglePlayOrder = useCallback(() => {
-    updateCurrentGame((g) => ({
-      ...g,
-      playOrder: g.playOrder === '先攻' ? '後攻' : '先攻',
+  const togglePlayOrderForGame = useCallback((gameNum: 1 | 2 | 3) => {
+    setGameStates((prev) => ({
+      ...prev,
+      [gameNum]: {
+        ...prev[gameNum],
+        playOrder: prev[gameNum].playOrder === '先攻' ? '後攻' : '先攻',
+      },
     }));
-  }, [updateCurrentGame]);
+  }, []);
 
   // -----------------------------------
   // Action欄をアクティブ化する（トグル）
@@ -462,78 +465,76 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         </div>
       </div>
 
-      {/* ===== ゲームタブ + 先攻後攻 ===== */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* G1/G2/G3 タブ（ターン履歴の表示切り替え用） */}
-        <div className="flex gap-0.5 bg-slate-900 rounded-lg border border-slate-700 p-0.5">
-          {GAME_NUMBERS.map((num) => (
-            <button
-              key={num}
-              onClick={() => setActiveGame(num)}
+      {/* ===== G1/G2/G3 統合コントロール行 ===== */}
+      {/* 各ゲームのタブ選択・先攻後攻・勝ち負けを1ブロックにまとめて横並びに表示する。 */}
+      {/* ゲーム間にはさりげない縦の区切り線を入れる。 */}
+      <div className="flex items-stretch bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+        {GAME_NUMBERS.map((num, idx) => (
+          <React.Fragment key={num}>
+            {/* G2/G3 の前にのみ薄い区切り線を入れる */}
+            {idx > 0 && (
+              <div className="w-px bg-slate-700 self-stretch shrink-0" />
+            )}
+
+            {/* 各ゲームのコントロールブロック（アクティブなゲームは背景を少し明るく） */}
+            <div
               className={`
-                px-4 py-1 rounded-md text-xs font-semibold transition
-                ${
-                  activeGame === num
-                    ? 'bg-slate-700 text-stone-100'
-                    : 'text-stone-500 hover:text-stone-300'
-                }
+                flex items-center gap-1 px-2 py-1.5 transition-colors
+                ${activeGame === num ? 'bg-slate-800' : 'hover:bg-slate-800/30'}
               `}
             >
-              G{num}
-            </button>
-          ))}
-        </div>
+              {/* G{n} タブ選択ボタン（クリックでそのゲームのターン履歴を表示） */}
+              <button
+                onClick={() => setActiveGame(num)}
+                className={`
+                  w-6 h-6 flex items-center justify-center rounded text-xs font-bold transition shrink-0
+                  ${activeGame === num
+                    ? 'bg-slate-600 text-stone-100'
+                    : 'text-stone-500 hover:text-stone-300'}
+                `}
+              >
+                G{num}
+              </button>
 
-        {/* 先攻後攻トグル（アクティブなゲームの先攻/後攻を切り替え） */}
-        <button
-          onClick={togglePlayOrder}
-          className={`
-            px-3 py-1 text-xs font-semibold rounded-lg border transition
-            ${
-              currentGame.playOrder === '先攻'
-                ? 'border-stone-400 text-stone-200 bg-slate-800'
-                : 'border-stone-600 text-stone-400 hover:bg-slate-800 hover:border-stone-400'
-            }
-          `}
-        >
-          G{activeGame}: {currentGame.playOrder}
-        </button>
-      </div>
+              {/* 先攻後攻トグル（このゲーム専用 - G1/G2/G3 独立） */}
+              <button
+                onClick={() => togglePlayOrderForGame(num)}
+                className={`
+                  px-1.5 py-0.5 text-xs rounded border transition whitespace-nowrap shrink-0
+                  ${gameStates[num].playOrder === '先攻'
+                    ? 'border-stone-500 text-stone-300 bg-slate-700'
+                    : 'border-slate-600 text-stone-500 hover:border-stone-500 hover:text-stone-300'}
+                `}
+              >
+                {gameStates[num].playOrder}
+              </button>
 
-      {/* ===== 勝敗入力（G1/G2/G3 を横並びで全て表示） ===== */}
-      {/* G1 勝ち 負け - , G2 勝ち 負け - , G3 勝ち 負け - の順で並べる */}
-      <div className="flex items-center gap-3 flex-wrap">
-        {GAME_NUMBERS.map((num) => (
-          <div key={num} className="flex items-center gap-1">
-            {/* ゲーム番号ラベル */}
-            <span className="text-xs font-semibold text-stone-500 w-5 shrink-0">G{num}</span>
-            {/* 勝ち / 負け / ー の3ボタン */}
-            {OUTCOMES.map((outcome) => {
-              const isSelected = gameOutcomes[num] === outcome;
-              const selectedStyle =
-                outcome === '勝ち'
-                  ? 'border-green-600 text-green-400 bg-green-900/20'
-                  : outcome === '負け'
-                    ? 'border-red-700 text-red-400 bg-red-900/20'
-                    : 'border-stone-500 text-stone-200 bg-slate-800';
-              return (
-                <button
-                  key={outcome}
-                  onClick={() => setGameOutcomes((prev) => ({ ...prev, [num]: outcome }))}
-                  className={`
-                    text-xs px-2.5 py-1 rounded border transition
-                    ${
-                      isSelected
+              {/* 勝ち / 負け / ー の結果ボタン（このゲーム専用） */}
+              {OUTCOMES.map((outcome) => {
+                const isSelected = gameOutcomes[num] === outcome;
+                const selectedStyle =
+                  outcome === '勝ち'
+                    ? 'border-green-600 text-green-400 bg-green-900/20'
+                    : outcome === '負け'
+                      ? 'border-red-700 text-red-400 bg-red-900/20'
+                      : 'border-stone-500 text-stone-200 bg-slate-800';
+                return (
+                  <button
+                    key={outcome}
+                    onClick={() => setGameOutcomes((prev) => ({ ...prev, [num]: outcome }))}
+                    className={`
+                      text-xs px-1.5 py-0.5 rounded border transition shrink-0
+                      ${isSelected
                         ? selectedStyle
-                        : 'border-slate-700 text-stone-500 hover:border-slate-600 hover:text-stone-400'
-                    }
-                  `}
-                >
-                  {outcome}
-                </button>
-              );
-            })}
-          </div>
+                        : 'border-slate-700 text-stone-500 hover:border-slate-600 hover:text-stone-400'}
+                    `}
+                  >
+                    {outcome}
+                  </button>
+                );
+              })}
+            </div>
+          </React.Fragment>
         ))}
       </div>
 
