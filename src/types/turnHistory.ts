@@ -35,6 +35,7 @@ export interface PlayerTurnData {
   land: number;                     // そのターンの土地の枚数
   life: number;                     // そのターンの現在ライフ
   lifeHistory: LifeHistoryEntry[];  // ライフ変動の記録履歴
+  freeText: string;                 // 自由記述（改行可能なメモ欄）
 }
 
 // -----------------------------------
@@ -80,6 +81,7 @@ export const createDefaultPlayerTurnData = (prevLife = 20, prevLand = 0): Player
   land: prevLand,
   life: prevLife,
   lifeHistory: [],
+  freeText: '',
 });
 
 // -----------------------------------

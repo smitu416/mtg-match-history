@@ -591,18 +591,21 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         )}
       </div>
 
-      {/* ===== 2カラム: 自分のターン列 / 相手のターン列（単一スクロール） ===== */}
-      {/* 1つの overflow-y-auto コンテナで両列をまとめて管理する */}
-      <div className="flex gap-2 flex-1 min-h-0 overflow-y-auto">
+      {/* ===== ターン列（自分と相手を同一行に配置して高さを揃える）===== */}
+      {/* 各ターンを grid-cols-2 の 1 行に入れることで、*/}
+      {/* 一方のAction欄が伸びても対応するターン行が同じ高さになる */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
 
-        {/* ----- 左列: 自分のターン ----- */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
-          <p className="text-xs font-semibold text-stone-400 sticky top-0 bg-slate-950 py-1 z-10">
-            自分
-          </p>
-          {currentGame.turns.map((turn, i) => (
+        {/* ヘッダー（スクロールに追従する固定行） */}
+        <div className="grid grid-cols-2 gap-2 sticky top-0 bg-slate-950 z-10 py-1">
+          <p className="text-xs font-semibold text-stone-400">自分</p>
+          <p className="text-xs font-semibold text-stone-400 text-right">相手</p>
+        </div>
+
+        {/* ターンペア: 同ターンの自分と相手を 1 行に並べる */}
+        {currentGame.turns.map((turn, i) => (
+          <div key={i} className="grid grid-cols-2 gap-2 items-stretch">
             <TurnRow
-              key={i}
               turnNumber={turn.turnNumber}
               data={turn.my}
               side="my"
@@ -612,17 +615,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
               onActivate={handleActivateField}
               onUpdate={(newData) => handleTurnUpdate(i, 'my', newData)}
             />
-          ))}
-        </div>
-
-        {/* ----- 右列: 相手のターン ----- */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
-          <p className="text-xs font-semibold text-stone-400 sticky top-0 bg-slate-950 py-1 text-right z-10">
-            相手
-          </p>
-          {currentGame.turns.map((turn, i) => (
             <TurnRow
-              key={i}
               turnNumber={turn.turnNumber}
               data={turn.opponent}
               side="opponent"
@@ -632,8 +625,8 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
               onActivate={handleActivateField}
               onUpdate={(newData) => handleTurnUpdate(i, 'opponent', newData)}
             />
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* ===== ターン増減ボタン ===== */}

@@ -5,9 +5,11 @@
 // 自分側と相手側それぞれで使い回す。
 //
 // レイアウト（1ターン = 2段構成）:
-// 上段: [ターン番号] [Action欄（チップ + フリー入力）] [土地 −/数/+] [ライフ −/数/+]
+// 上段: [ターン番号] [Action欄（チップ + フリーメモ）] [土地 −/数/+] [ライフ −/数/+]
 // 下段:             [ライフ履歴: 20→18→15 × × ×] [記録ボタン]
-// ※ ライフ履歴を下段に分離することで、Action欄の幅が変動しないようにする
+//
+// 注意: 外側の div に h-full を持たせることで、
+//       親の grid セル（TurnHistoryPage の paired grid）の高さいっぱいに伸びる。
 
 import React, { useCallback } from 'react';
 import type { ActionChip, PlayerTurnData } from '../../types/turnHistory';
@@ -55,6 +57,16 @@ const TurnRow: React.FC<TurnRowProps> = ({
   const handleRemoveChip = useCallback(
     (chipId: string) => {
       onUpdate({ ...data, actions: data.actions.filter((c) => c.id !== chipId) });
+    },
+    [data, onUpdate],
+  );
+
+  // -----------------------------------
+  // フリーテキストを更新する処理
+  // -----------------------------------
+  const handleFreeTextChange = useCallback(
+    (text: string) => {
+      onUpdate({ ...data, freeText: text });
     },
     [data, onUpdate],
   );
@@ -171,16 +183,13 @@ const TurnRow: React.FC<TurnRowProps> = ({
 
   // -----------------------------------
   // ライフ履歴の下段（flex-wrap で幅が足りなければ改行する）
-  // 個別 × ボタン + 記録ボタン
   // -----------------------------------
   const lifeHistoryRow = (
     <div className="flex flex-wrap items-center gap-0.5">
       {data.lifeHistory.map((entry, idx) => (
         <span key={idx} className="inline-flex items-center text-xs text-stone-500">
-          {/* → 区切り（最初のエントリ以外に表示） */}
           {idx > 0 && <span className="text-stone-700 mx-0.5">→</span>}
           {entry.life}
-          {/* このエントリを削除するボタン */}
           <button
             onClick={() => handleRemoveLifeHistory(idx)}
             title="この記録を削除"
@@ -190,7 +199,6 @@ const TurnRow: React.FC<TurnRowProps> = ({
           </button>
         </span>
       ))}
-      {/* 現在のライフ値を履歴に追記するボタン */}
       <button
         onClick={handleRecordLife}
         title="現在のライフを履歴に記録する"
@@ -202,9 +210,10 @@ const TurnRow: React.FC<TurnRowProps> = ({
   );
 
   return (
+    // h-full: 親 grid の stretch で同ターン行が同じ高さになる
     <div
       className={`
-        flex flex-col gap-1 p-2 rounded-lg border
+        h-full flex flex-col gap-1 p-2 rounded-lg border
         ${isActive ? 'border-slate-600 bg-slate-900/60' : 'border-transparent'}
         transition-colors duration-150
       `}
@@ -212,7 +221,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
       {/* ===== 自分側（左）レイアウト ===== */}
       {side === 'my' && (
         <>
-          {/* 上段: [T番号] [Action欄] [土地] [ライフ] */}
+          {/* 上段: [T番号] [Action欄（チップ+メモ）] [土地] [ライフ] */}
           <div className="flex items-start gap-1">
             <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
               T{turnNumber}
@@ -224,13 +233,15 @@ const TurnRow: React.FC<TurnRowProps> = ({
                 onActivate={() => onActivate(fieldId)}
                 onAddChip={handleAddChip}
                 onRemoveChip={handleRemoveChip}
+                freeText={data.freeText ?? ''}
+                onFreeTextChange={handleFreeTextChange}
                 placeholder="カードをタップして追加"
               />
             </div>
             {landControl}
             {lifeControl}
           </div>
-          {/* 下段: ライフ履歴（T番号の幅分インデント） */}
+          {/* 下段: ライフ履歴 */}
           <div className="ml-7">
             {lifeHistoryRow}
           </div>
@@ -240,7 +251,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
       {/* ===== 相手側（右）レイアウト ===== */}
       {side === 'opponent' && (
         <>
-          {/* 上段: [ライフ] [土地] [Action欄] [T番号] */}
+          {/* 上段: [ライフ] [土地] [Action欄（チップ+メモ）] [T番号] */}
           <div className="flex items-start gap-1">
             {lifeControl}
             {landControl}
@@ -251,6 +262,8 @@ const TurnRow: React.FC<TurnRowProps> = ({
                 onActivate={() => onActivate(fieldId)}
                 onAddChip={handleAddChip}
                 onRemoveChip={handleRemoveChip}
+                freeText={data.freeText ?? ''}
+                onFreeTextChange={handleFreeTextChange}
                 placeholder="相手の行動を追加"
               />
             </div>
@@ -258,7 +271,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
               T{turnNumber}
             </span>
           </div>
-          {/* 下段: ライフ履歴（T番号の幅分インデント） */}
+          {/* 下段: ライフ履歴 */}
           <div className="mr-7">
             {lifeHistoryRow}
           </div>

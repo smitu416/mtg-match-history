@@ -20,9 +20,10 @@ import type { Match, FilterOptions, SortOptions, SortField } from '../../types';
 // 渡されない場合は内部の MatchForm にフォールバックする（後方互換性のため）。
 interface MatchListProps {
   onEditMatch?: (match: Match) => void;
+  onViewMatch?: (match: Match) => void; // 行クリックで詳細ビューを開く
 }
 
-export function MatchList({ onEditMatch }: MatchListProps = {}) {
+export function MatchList({ onEditMatch, onViewMatch }: MatchListProps = {}) {
   // ===================================
   // フィルター・ソートの状態
   // ===================================
@@ -96,6 +97,13 @@ export function MatchList({ onEditMatch }: MatchListProps = {}) {
     } else {
       setEditingMatch(match);
     }
+  };
+
+  // -----------------------------------
+  // 詳細表示ハンドラー（行クリック）
+  // -----------------------------------
+  const handleView = (match: Match) => {
+    onViewMatch?.(match);
   };
 
   // -----------------------------------
@@ -203,7 +211,8 @@ export function MatchList({ onEditMatch }: MatchListProps = {}) {
         <GroupedMatchList
           matches={matches}
           matchGroups={matchGroups ?? []}
-          onEdit={(match) => setEditingMatch(match)}
+          onEdit={(match) => handleEdit(match)}
+          onView={onViewMatch ? (match) => handleView(match) : undefined}
           onDelete={handleDelete}
         />
       ) : (
@@ -232,6 +241,7 @@ export function MatchList({ onEditMatch }: MatchListProps = {}) {
               key={match.id}
               match={match}
               onEdit={() => handleEdit(match)}
+              onView={onViewMatch ? () => handleView(match) : undefined}
               onDelete={() => handleDelete(match)}
             />
           ))}
@@ -251,10 +261,11 @@ interface GroupedMatchListProps {
   matches: Match[];
   matchGroups: import('../../types/turnHistory').MatchGroup[];
   onEdit: (match: Match) => void;
+  onView?: (match: Match) => void;
   onDelete: (match: Match) => void;
 }
 
-function GroupedMatchList({ matches, matchGroups, onEdit, onDelete }: GroupedMatchListProps) {
+function GroupedMatchList({ matches, matchGroups, onEdit, onView, onDelete }: GroupedMatchListProps) {
   // 編集中のグループ名を管理する（groupId → 編集中テキスト）
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
@@ -370,6 +381,7 @@ function GroupedMatchList({ matches, matchGroups, onEdit, onDelete }: GroupedMat
                   key={match.id}
                   match={match}
                   onEdit={() => onEdit(match)}
+                  onView={onView ? () => onView(match) : undefined}
                   onDelete={() => onDelete(match)}
                 />
               ))}
@@ -388,10 +400,11 @@ function GroupedMatchList({ matches, matchGroups, onEdit, onDelete }: GroupedMat
 interface MatchCardProps {
   match: Match;
   onEdit: () => void;
+  onView?: () => void;  // 行クリックで詳細ビューを開く
   onDelete: () => void;
 }
 
-function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
+function MatchCard({ match, onEdit, onView, onDelete }: MatchCardProps) {
   // 試合の勝敗（マッチ全体の結果）を計算する
   const wins = [match.game1, match.game2, match.game3].filter(
     (g) => g.outcome === '勝ち'
@@ -406,11 +419,14 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
 
   return (
     // 1行グリッドレイアウト: [対戦] [先攻] [G1] [G2] [G3] [操作]
+    // onView が渡されていれば行全体をクリック可能にする
     <div
+      onClick={onView}
       className={`
         grid grid-cols-[1fr_3rem_2.5rem_2.5rem_2.5rem_5rem]
         items-center gap-1 px-3 py-2 border-l-4 ${borderColor}
         hover:bg-slate-800/30 transition
+        ${onView ? 'cursor-pointer' : ''}
       `}
     >
       {/* 対戦の概要 */}
@@ -432,14 +448,14 @@ function MatchCard({ match, onEdit, onDelete }: MatchCardProps) {
       {/* 編集・削除ボタン */}
       <div className="flex gap-1 justify-end">
         <button
-          onClick={onEdit}
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
           className="text-xs px-2 py-0.5 border border-stone-600 text-stone-400
                      rounded hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
         >
           編集
         </button>
         <button
-          onClick={onDelete}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="text-xs px-2 py-0.5 border border-slate-700 text-stone-500
                      rounded hover:bg-slate-800 hover:text-red-400 hover:border-red-800 transition"
         >

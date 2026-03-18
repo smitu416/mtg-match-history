@@ -13,13 +13,14 @@ import { DeckStats, DeckDetailStats } from './components/stats/DeckStats';
 import { OverallStats } from './components/stats/OverallStats';
 import { CsvImportModal } from './components/CsvImportModal';
 import TurnHistoryPage from './components/turn/TurnHistoryPage';
+import MatchDetailView from './components/turn/MatchDetailView';
 import './index.css';
 
 // -----------------------------------
 // 表示するページを表す型
 // 'turn-history' = ターン履歴入力ページ（新規入力の拡張版）
 // -----------------------------------
-type Page = 'list' | 'new' | 'stats' | 'turn-history';
+type Page = 'list' | 'new' | 'stats' | 'turn-history' | 'detail';
 
 // -----------------------------------
 // App コンポーネント本体
@@ -33,6 +34,9 @@ function App() {
 
   // 編集中の対戦データ（TurnHistoryPage に渡す）
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+
+  // 詳細表示中の対戦データ（MatchDetailView に渡す）
+  const [viewingMatch, setViewingMatch] = useState<Match | null>(null);
 
   // ===================================
   // 表示部分（JSX）
@@ -87,7 +91,7 @@ function App() {
 
       {/* ===== メインコンテンツ ===== */}
       {/* ターン履歴ページは画面を広く使うので max-w-2xl の制限を外す */}
-      <main className={currentPage === 'turn-history' ? 'px-3 py-3 h-[calc(100vh-7rem)] flex flex-col' : 'max-w-2xl mx-auto px-4 py-5'}>
+      <main className={(currentPage === 'turn-history' || currentPage === 'detail') ? 'px-3 py-3 h-[calc(100vh-7rem)] flex flex-col' : 'max-w-2xl mx-auto px-4 py-5'}>
 
         {/* 対戦一覧ページ */}
         {currentPage === 'list' && (
@@ -95,6 +99,10 @@ function App() {
             onEditMatch={(match) => {
               setEditingMatch(match);
               setCurrentPage('turn-history');
+            }}
+            onViewMatch={(match) => {
+              setViewingMatch(match);
+              setCurrentPage('detail');
             }}
           />
         )}
@@ -113,6 +121,19 @@ function App() {
             initialMatch={editingMatch ?? undefined}
             onSave={() => { setCurrentPage('list'); setEditingMatch(null); }}
             onCancel={() => { setCurrentPage('list'); setEditingMatch(null); }}
+          />
+        )}
+
+        {/* 詳細ビューページ（対戦一覧の行クリックから遷移） */}
+        {currentPage === 'detail' && viewingMatch && (
+          <MatchDetailView
+            match={viewingMatch}
+            onClose={() => { setCurrentPage('list'); setViewingMatch(null); }}
+            onEdit={() => {
+              setEditingMatch(viewingMatch);
+              setViewingMatch(null);
+              setCurrentPage('turn-history');
+            }}
           />
         )}
 
