@@ -177,7 +177,13 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         for (const session of existingSessions) {
           next[session.gameNumber] = {
             playOrder: session.playOrder,
-            turns: session.turns,
+            // 保存済みデータは lifeIsSet が undefined の場合があるため true で補完する
+            // （ユーザーが明示的に保存した値なので、常に lifeIsSet=true 扱い）
+            turns: session.turns.map((turn) => ({
+              ...turn,
+              my: { ...turn.my, lifeIsSet: turn.my.lifeIsSet ?? true },
+              opponent: { ...turn.opponent, lifeIsSet: turn.opponent.lifeIsSet ?? true },
+            })),
           };
         }
         return next;
@@ -370,6 +376,21 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
   const hasActiveField =
     activeFieldId !== null && activeFieldId.startsWith(`g${activeGame}-`);
 
+  // -----------------------------------
+  // ターンiの前ターンデータから「引き継ぐライフ値」を計算するヘルパー
+  // 優先順位: lifeHistory の最後 > data.life（lifeIsSet=true）> 20（未操作）
+  // -----------------------------------
+  const computeInheritedLife = (prevData: import('../../types/turnHistory').PlayerTurnData): number => {
+    // 前ターンでライフ履歴が記録されていればその最後のエントリを引き継ぐ
+    if (prevData.lifeHistory.length > 0) {
+      return prevData.lifeHistory[prevData.lifeHistory.length - 1].life;
+    }
+    // ライフカウンターを操作済みならその値を引き継ぐ
+    if (prevData.lifeIsSet) return prevData.life;
+    // 前ターン自体も未操作なら 20 を維持する
+    return 20;
+  };
+
   // 入力欄の共通スタイル
   const inputClass =
     'w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-2 py-1 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-stone-500';
@@ -441,9 +462,9 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         </div>
       </div>
 
-      {/* ===== ゲームタブ + 先攻後攻 + 勝敗入力 ===== */}
+      {/* ===== ゲームタブ + 先攻後攻 ===== */}
       <div className="flex items-center gap-2 flex-wrap">
-        {/* G1/G2/G3 タブ */}
+        {/* G1/G2/G3 タブ（ターン履歴の表示切り替え用） */}
         <div className="flex gap-0.5 bg-slate-900 rounded-lg border border-slate-700 p-0.5">
           {GAME_NUMBERS.map((num) => (
             <button
@@ -463,7 +484,7 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
           ))}
         </div>
 
-        {/* 先攻後攻トグル */}
+        {/* 先攻後攻トグル（アクティブなゲームの先攻/後攻を切り替え） */}
         <button
           onClick={togglePlayOrder}
           className={`
@@ -477,35 +498,43 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         >
           G{activeGame}: {currentGame.playOrder}
         </button>
+      </div>
 
-        {/* 勝敗入力（勝ち / 負け / ー）*/}
-        <div className="flex gap-1 ml-auto">
-          {OUTCOMES.map((outcome) => {
-            const isSelected = gameOutcomes[activeGame] === outcome;
-            const selectedStyle =
-              outcome === '勝ち'
-                ? 'border-green-600 text-green-400 bg-green-900/20'
-                : outcome === '負け'
-                  ? 'border-red-700 text-red-400 bg-red-900/20'
-                  : 'border-stone-500 text-stone-200 bg-slate-800';
-            return (
-              <button
-                key={outcome}
-                onClick={() => setGameOutcomes((prev) => ({ ...prev, [activeGame]: outcome }))}
-                className={`
-                  text-xs px-2.5 py-1 rounded border transition
-                  ${
-                    isSelected
-                      ? selectedStyle
-                      : 'border-slate-700 text-stone-500 hover:border-slate-600 hover:text-stone-400'
-                  }
-                `}
-              >
-                {outcome}
-              </button>
-            );
-          })}
-        </div>
+      {/* ===== 勝敗入力（G1/G2/G3 を横並びで全て表示） ===== */}
+      {/* G1 勝ち 負け - , G2 勝ち 負け - , G3 勝ち 負け - の順で並べる */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {GAME_NUMBERS.map((num) => (
+          <div key={num} className="flex items-center gap-1">
+            {/* ゲーム番号ラベル */}
+            <span className="text-xs font-semibold text-stone-500 w-5 shrink-0">G{num}</span>
+            {/* 勝ち / 負け / ー の3ボタン */}
+            {OUTCOMES.map((outcome) => {
+              const isSelected = gameOutcomes[num] === outcome;
+              const selectedStyle =
+                outcome === '勝ち'
+                  ? 'border-green-600 text-green-400 bg-green-900/20'
+                  : outcome === '負け'
+                    ? 'border-red-700 text-red-400 bg-red-900/20'
+                    : 'border-stone-500 text-stone-200 bg-slate-800';
+              return (
+                <button
+                  key={outcome}
+                  onClick={() => setGameOutcomes((prev) => ({ ...prev, [num]: outcome }))}
+                  className={`
+                    text-xs px-2.5 py-1 rounded border transition
+                    ${
+                      isSelected
+                        ? selectedStyle
+                        : 'border-slate-700 text-stone-500 hover:border-slate-600 hover:text-stone-400'
+                    }
+                  `}
+                >
+                  {outcome}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* ===== デッキリスト + カードボタンパネル（上部横長固定） ===== */}
@@ -603,30 +632,40 @@ const TurnHistoryPage: React.FC<TurnHistoryPageProps> = ({ onSave, onCancel, ini
         </div>
 
         {/* ターンペア: 同ターンの自分と相手を 1 行に並べる */}
-        {currentGame.turns.map((turn, i) => (
-          <div key={i} className="grid grid-cols-2 gap-2 items-stretch">
-            <TurnRow
-              turnNumber={turn.turnNumber}
-              data={turn.my}
-              side="my"
-              isActive={activeFieldId === `g${activeGame}-t${i}-my`}
-              activeFieldId={activeFieldId}
-              fieldId={`g${activeGame}-t${i}-my`}
-              onActivate={handleActivateField}
-              onUpdate={(newData) => handleTurnUpdate(i, 'my', newData)}
-            />
-            <TurnRow
-              turnNumber={turn.turnNumber}
-              data={turn.opponent}
-              side="opponent"
-              isActive={activeFieldId === `g${activeGame}-t${i}-opponent`}
-              activeFieldId={activeFieldId}
-              fieldId={`g${activeGame}-t${i}-opponent`}
-              onActivate={handleActivateField}
-              onUpdate={(newData) => handleTurnUpdate(i, 'opponent', newData)}
-            />
-          </div>
-        ))}
+        {currentGame.turns.map((turn, i) => {
+          // 前ターンのデータ（T1は前ターンなし → undefined）
+          const prevTurn = i > 0 ? currentGame.turns[i - 1] : null;
+          // 各サイドの「前ターン最終ライフ」を引き継ぎ値として計算する
+          const myInheritedLife = prevTurn ? computeInheritedLife(prevTurn.my) : undefined;
+          const opponentInheritedLife = prevTurn ? computeInheritedLife(prevTurn.opponent) : undefined;
+
+          return (
+            <div key={i} className="grid grid-cols-2 gap-2 items-stretch">
+              <TurnRow
+                turnNumber={turn.turnNumber}
+                data={turn.my}
+                side="my"
+                isActive={activeFieldId === `g${activeGame}-t${i}-my`}
+                activeFieldId={activeFieldId}
+                fieldId={`g${activeGame}-t${i}-my`}
+                onActivate={handleActivateField}
+                onUpdate={(newData) => handleTurnUpdate(i, 'my', newData)}
+                inheritedLife={myInheritedLife}
+              />
+              <TurnRow
+                turnNumber={turn.turnNumber}
+                data={turn.opponent}
+                side="opponent"
+                isActive={activeFieldId === `g${activeGame}-t${i}-opponent`}
+                activeFieldId={activeFieldId}
+                fieldId={`g${activeGame}-t${i}-opponent`}
+                onActivate={handleActivateField}
+                onUpdate={(newData) => handleTurnUpdate(i, 'opponent', newData)}
+                inheritedLife={opponentInheritedLife}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* ===== ターン増減ボタン ===== */}

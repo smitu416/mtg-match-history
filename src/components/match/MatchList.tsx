@@ -7,8 +7,8 @@
 import { useState } from 'react';
 import { useMatches, deleteMatch } from '../../hooks/useMatches';
 import { useMyDeckNames, useOpponentPlayerNames, useOpponentDeckNames } from '../../hooks/useDecks';
-import { exportMatchesToCsv } from '../../services/csvExport';
-import { getAllMatches } from '../../hooks/useMatches';
+// CSVエクスポート機能はヘッダー（App.tsx）に移動したためここでは不要
+
 import { useMatchGroups, updateGroupName } from '../../hooks/useMatchGroups';
 import { MatchForm } from './MatchForm';
 import type { Match, FilterOptions, SortOptions, SortField } from '../../types';
@@ -72,18 +72,6 @@ export function MatchList({ onEditMatch, onViewMatch }: MatchListProps = {}) {
       field,
       order: prev.field === field && prev.order === 'asc' ? 'desc' : 'asc',
     }));
-  };
-
-  // -----------------------------------
-  // CSVエクスポートボタンの処理
-  // -----------------------------------
-  const handleExport = async () => {
-    const allMatches = await getAllMatches();
-    if (allMatches.length === 0) {
-      alert('エクスポートする対戦データがありません');
-      return;
-    }
-    exportMatchesToCsv(allMatches);
   };
 
   // -----------------------------------
@@ -160,14 +148,7 @@ export function MatchList({ onEditMatch, onViewMatch }: MatchListProps = {}) {
             クリア
           </button>
 
-          {/* CSVエクスポートボタン */}
-          <button
-            onClick={handleExport}
-            className="ml-auto px-3 py-1.5 text-sm border border-stone-600 text-stone-400
-                       rounded-lg hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition"
-          >
-            CSVバックアップ
-          </button>
+          {/* CSVエクスポートはヘッダーに移動したためここでは非表示 */}
         </div>
 
         {/* 件数表示 */}

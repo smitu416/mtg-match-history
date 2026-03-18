@@ -12,6 +12,8 @@ import { PlayerStats } from './components/stats/PlayerStats';
 import { DeckStats, DeckDetailStats } from './components/stats/DeckStats';
 import { OverallStats } from './components/stats/OverallStats';
 import { CsvImportModal } from './components/CsvImportModal';
+import { getAllMatches } from './hooks/useMatches';
+import { exportMatchesToCsv } from './services/csvExport';
 import TurnHistoryPage from './components/turn/TurnHistoryPage';
 import MatchDetailView from './components/turn/MatchDetailView';
 import './index.css';
@@ -31,6 +33,18 @@ function App() {
 
   // CSVインポートモーダルを表示するかどうか
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // -----------------------------------
+  // CSVエクスポートの処理（全対戦データをCSVとしてダウンロード）
+  // -----------------------------------
+  const handleExport = async () => {
+    const allMatches = await getAllMatches();
+    if (allMatches.length === 0) {
+      alert('エクスポートする対戦データがありません');
+      return;
+    }
+    exportMatchesToCsv(allMatches);
+  };
 
   // 編集中の対戦データ（TurnHistoryPage に渡す）
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
@@ -59,6 +73,15 @@ function App() {
                          text-sm transition px-3 py-1.5 rounded-lg"
             >
               CSVインポート
+            </button>
+
+            {/* CSVエクスポートボタン（旧: CSVバックアップ → インポートの隣に移動・名称変更） */}
+            <button
+              onClick={handleExport}
+              className="border border-stone-600 text-stone-400 hover:text-stone-200 hover:border-stone-400
+                         text-sm transition px-3 py-1.5 rounded-lg"
+            >
+              CSVエクスポート
             </button>
 
             {/* 新規入力ボタン（クリックするとターン履歴入力ページに遷移） */}

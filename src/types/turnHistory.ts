@@ -36,6 +36,7 @@ export interface PlayerTurnData {
   life: number;                     // そのターンの現在ライフ
   lifeHistory: LifeHistoryEntry[];  // ライフ変動の記録履歴
   freeText: string;                 // 自由記述（改行可能なメモ欄）
+  lifeIsSet?: boolean;              // ユーザーがライフカウンターを明示操作したか（false/未定義 → 前ターン値を継承表示）
 }
 
 // -----------------------------------
@@ -82,6 +83,7 @@ export const createDefaultPlayerTurnData = (prevLife = 20, prevLand = 0): Player
   life: prevLife,
   lifeHistory: [],
   freeText: '',
+  lifeIsSet: false, // 新規ターンはユーザーが操作するまで前ターン値を継承表示する
 });
 
 // -----------------------------------

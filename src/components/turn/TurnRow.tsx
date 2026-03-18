@@ -5,11 +5,15 @@
 // 自分側と相手側それぞれで使い回す。
 //
 // レイアウト（1ターン = 2段構成）:
-// 上段: [ターン番号] [Action欄（チップ + フリーメモ）] [土地 −/数/+] [ライフ −/数/+]
+// 上段: [ターン番号] [Action欄（チップ + フリーメモ）] [土地: −/数/+]
+//                                                        [ライフ: −/数/+]
 // 下段:             [ライフ履歴: 20→18→15 × × ×] [記録ボタン]
 //
 // 注意: 外側の div に h-full を持たせることで、
 //       親の grid セル（TurnHistoryPage の paired grid）の高さいっぱいに伸びる。
+//
+// inheritedLife: 前ターンから引き継ぐライフ値。ユーザーが操作するまで
+//               このターンのライフとして表示する（lifeIsSet=false のとき）。
 
 import React, { useCallback } from 'react';
 import type { ActionChip, PlayerTurnData } from '../../types/turnHistory';
@@ -23,10 +27,11 @@ interface TurnRowProps {
   data: PlayerTurnData;      // このターンのプレイヤーデータ
   side: 'my' | 'opponent';   // 自分側か相手側か（レイアウトの向きが変わる）
   isActive: boolean;         // このAction欄がアクティブかどうか
-  activeFieldId: string | null; // 現在アクティブなフィールドのID
+  activeFieldId: string | null; // 現在アクティブなフィールドのID（未使用だが将来拡張用）
   fieldId: string;           // このAction欄のユニークID（例: "t1-my"）
   onActivate: (fieldId: string) => void; // アクティブにするときのコールバック
   onUpdate: (data: PlayerTurnData) => void; // データを更新するときのコールバック
+  inheritedLife?: number;    // 前ターンから引き継ぐライフ値（未操作時に表示する）
 }
 
 // -----------------------------------
@@ -40,7 +45,18 @@ const TurnRow: React.FC<TurnRowProps> = ({
   fieldId,
   onActivate,
   onUpdate,
+  inheritedLife,
 }) => {
+  // -----------------------------------
+  // 実際に表示・操作に使うライフ値を決定する
+  // lifeIsSet=true ならユーザーが明示的に設定した data.life を使う
+  // lifeIsSet=false/undefined なら前ターンから引き継いだ inheritedLife を使う
+  // inheritedLife も undefined なら data.life にフォールバックする
+  // -----------------------------------
+  const displayedLife = (data.lifeIsSet ?? false)
+    ? data.life
+    : (inheritedLife ?? data.life);
+
   // -----------------------------------
   // チップを追加する処理
   // -----------------------------------
@@ -92,29 +108,32 @@ const TurnRow: React.FC<TurnRowProps> = ({
 
   // -----------------------------------
   // ライフを増減する処理
+  // displayedLife を起点にすることで、前ターン引き継ぎ値から正しく増減できる
   // -----------------------------------
   const handleLifeChange = useCallback(
     (delta: number) => {
-      onUpdate({ ...data, life: data.life + delta });
+      // displayedLife（表示値）を起点に増減し、以降は data.life として管理する
+      onUpdate({ ...data, life: displayedLife + delta, lifeIsSet: true });
     },
-    [data, onUpdate],
+    [data, onUpdate, displayedLife],
   );
 
   const handleLifeInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = parseInt(e.target.value, 10);
-      onUpdate({ ...data, life: isNaN(val) ? 0 : val });
+      onUpdate({ ...data, life: isNaN(val) ? 0 : val, lifeIsSet: true });
     },
     [data, onUpdate],
   );
 
   // -----------------------------------
   // ライフ履歴を記録する処理（「記録」ボタンを押したとき）
+  // displayedLife を記録する（前ターン引き継ぎ値も正しく記録される）
   // -----------------------------------
   const handleRecordLife = useCallback(() => {
-    const entry = { life: data.life, recordedAt: new Date().toISOString() };
+    const entry = { life: displayedLife, recordedAt: new Date().toISOString() };
     onUpdate({ ...data, lifeHistory: [...data.lifeHistory, entry] });
-  }, [data, onUpdate]);
+  }, [data, onUpdate, displayedLife]);
 
   // -----------------------------------
   // ライフ履歴の特定エントリを削除する処理
@@ -128,7 +147,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
   );
 
   // -----------------------------------
-  // 土地コントロール（上段に表示）
+  // 土地コントロール（縦並び上段）
   // -----------------------------------
   const landControl = (
     <div className="flex items-center gap-0.5 shrink-0">
@@ -155,7 +174,8 @@ const TurnRow: React.FC<TurnRowProps> = ({
   );
 
   // -----------------------------------
-  // ライフコントロール（上段に表示）
+  // ライフコントロール（縦並び下段）
+  // displayedLife を表示・操作の起点にする
   // -----------------------------------
   const lifeControl = (
     <div className="flex items-center gap-0.5 shrink-0">
@@ -168,7 +188,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
       </button>
       <input
         type="number"
-        value={data.life}
+        value={displayedLife}
         onChange={handleLifeInput}
         className="w-7 bg-slate-800 text-stone-200 text-xs text-center border border-slate-700 rounded px-0 py-0.5 focus:outline-none focus:ring-1 focus:ring-stone-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
@@ -178,6 +198,17 @@ const TurnRow: React.FC<TurnRowProps> = ({
       >
         ＋
       </button>
+    </div>
+  );
+
+  // -----------------------------------
+  // 土地・ライフを上下に積んだコントロール列
+  // 上: 土地（🌲）、下: ライフ（❤）
+  // -----------------------------------
+  const counters = (
+    <div className="flex flex-col gap-0.5 shrink-0">
+      {landControl}
+      {lifeControl}
     </div>
   );
 
@@ -221,7 +252,7 @@ const TurnRow: React.FC<TurnRowProps> = ({
       {/* ===== 自分側（左）レイアウト ===== */}
       {side === 'my' && (
         <>
-          {/* 上段: [T番号] [Action欄（チップ+メモ）] [土地] [ライフ] */}
+          {/* 上段: [T番号] [Action欄（チップ+メモ）] [土地/ライフ 縦並び] */}
           <div className="flex items-start gap-1">
             <span className="text-xs font-bold text-stone-500 w-6 shrink-0 pt-2 text-center">
               T{turnNumber}
@@ -238,8 +269,8 @@ const TurnRow: React.FC<TurnRowProps> = ({
                 placeholder="カードをタップして追加"
               />
             </div>
-            {landControl}
-            {lifeControl}
+            {/* 土地(上) + ライフ(下) の縦並び */}
+            {counters}
           </div>
           {/* 下段: ライフ履歴 */}
           <div className="ml-7">
@@ -251,10 +282,10 @@ const TurnRow: React.FC<TurnRowProps> = ({
       {/* ===== 相手側（右）レイアウト ===== */}
       {side === 'opponent' && (
         <>
-          {/* 上段: [ライフ] [土地] [Action欄（チップ+メモ）] [T番号] */}
+          {/* 上段: [土地/ライフ 縦並び] [Action欄（チップ+メモ）] [T番号] */}
           <div className="flex items-start gap-1">
-            {lifeControl}
-            {landControl}
+            {/* 土地(上) + ライフ(下) の縦並び */}
+            {counters}
             <div className="flex-1 min-w-0">
               <ActionChipField
                 chips={data.actions}
