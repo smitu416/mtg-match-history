@@ -10,6 +10,7 @@
 
 import Dexie, { type EntityTable } from 'dexie';
 import type { Match, Deck } from '../types';
+import type { GameSession, MatchGroup } from '../types/turnHistory';
 
 // -----------------------------------
 // データベースのクラス定義
@@ -18,8 +19,10 @@ import type { Match, Deck } from '../types';
 class MtgDatabase extends Dexie {
   // テーブルの定義
   // EntityTable<Match, 'id'> = 「Matchの型を持ち、'id'が主キーのテーブル」
-  matches!: EntityTable<Match, 'id'>; // 対戦履歴テーブル
-  decks!: EntityTable<Deck, 'id'>;   // デッキテーブル
+  matches!: EntityTable<Match, 'id'>;           // 対戦履歴テーブル
+  decks!: EntityTable<Deck, 'id'>;             // デッキテーブル
+  gameSessions!: EntityTable<GameSession, 'id'>; // ターン履歴（ゲームセッション）テーブル
+  matchGroups!: EntityTable<MatchGroup, 'id'>;  // 対戦グループテーブル
 
   constructor() {
     // データベース名を指定してDexieを初期化する
@@ -27,16 +30,30 @@ class MtgDatabase extends Dexie {
 
     // データベースのバージョンとスキーマ（テーブル構造）を定義する
     // バージョンは変更するたびに数字を増やす（マイグレーション管理のため）
+    // version(1) は既存データのまま維持する
     this.version(1).stores({
-      // matches テーブルのインデックス設定
-      // '&id' = idは主キー（ユニーク、重複不可）
-      // createdAt, myDeck, opponentPlayerName, opponentDeck = 検索・ソートに使うフィールド
       matches: '&id, createdAt, myDeck, opponentPlayerName, opponentDeck',
-
-      // decks テーブルのインデックス設定
-      // '&id' = idは主キー
-      // name = デッキ名で検索できるようにする
       decks: '&id, name',
+    });
+
+    // version(2): ターン履歴とグループ機能を追加
+    // 既存のmatchesテーブルに groupId インデックスを追加する
+    this.version(2).stores({
+      // matches テーブルのインデックス設定（groupIdを追加）
+      // '&id' = idは主キー（ユニーク、重複不可）
+      // createdAt, myDeck, opponentPlayerName, opponentDeck, groupId = 検索に使うフィールド
+      matches: '&id, createdAt, myDeck, opponentPlayerName, opponentDeck, groupId',
+
+      // decks テーブルのインデックス設定（変更なし）
+      decks: '&id, name',
+
+      // gameSessions テーブル: ターン履歴を保存する
+      // matchId = どの試合のセッションか（Matchのidで検索できる）
+      // gameNumber = G1/G2/G3 のどれか（1, 2, 3）
+      gameSessions: '&id, matchId, gameNumber, createdAt',
+
+      // matchGroups テーブル: 試合をまとめるグループを保存する
+      matchGroups: '&id, createdAt',
     });
   }
 }

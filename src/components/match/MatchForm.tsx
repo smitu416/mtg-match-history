@@ -131,15 +131,15 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
   // 表示部分（JSX）
   // ===================================
   return (
-    <div className="bg-white rounded-xl shadow p-5 max-w-lg mx-auto">
+    <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 max-w-lg mx-auto">
       {/* タイトル */}
-      <h2 className="text-lg font-bold text-gray-800 mb-4">
+      <h2 className="text-lg font-bold text-stone-200 mb-4">
         {initialMatch ? '対戦を編集' : '新規対戦を入力'}
       </h2>
 
       {/* エラーメッセージ */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mb-4 p-3 bg-red-950 border border-red-700 rounded-lg text-red-400 text-sm">
           {error}
         </div>
       )}
@@ -197,7 +197,7 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
 
         {/* ===== ゲーム結果 ===== */}
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-700">ゲーム結果</label>
+          <label className="block text-sm font-semibold text-stone-300">ゲーム結果</label>
           <GameResultRow gameNumber={1} game={game1} onChange={setGame1} />
           <GameResultRow gameNumber={2} game={game2} onChange={setGame2} />
           <GameResultRow gameNumber={3} game={game3} onChange={setGame3} />
@@ -210,8 +210,8 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700
-                     hover:bg-gray-50 transition text-sm font-medium"
+          className="flex-1 py-2 px-4 border border-stone-600 rounded-lg text-stone-400
+                     hover:bg-slate-800 hover:text-stone-200 hover:border-stone-400 transition text-sm font-medium"
         >
           キャンセル
         </button>
@@ -221,8 +221,8 @@ export function MatchForm({ initialMatch, onSave, onCancel }: MatchFormProps) {
           type="button"
           onClick={handleSave}
           disabled={isSaving} // 保存中は押せないようにする
-          className="flex-1 py-2 px-4 bg-indigo-600 text-white rounded-lg
-                     hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
+          className="flex-1 py-2 px-4 border border-stone-500 text-stone-200 rounded-lg
+                     hover:bg-slate-800 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed
                      transition text-sm font-semibold"
         >
           {isSaving ? '保存中...' : '保存'}
@@ -245,10 +245,10 @@ interface FormFieldProps {
 function FormField({ label, required, children }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1">
+      <label className="block text-sm font-semibold text-stone-300 mb-1">
         {label}
         {/* 必須マーク */}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-400 ml-1">*</span>}
       </label>
       {children}
     </div>
@@ -276,8 +276,8 @@ function DatalistInput({ value, onChange, placeholder, listId, options }: Datali
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         list={listId} // datalistと紐付ける
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                   focus:outline-none focus:ring-2 focus:ring-indigo-300"
+        className="w-full bg-slate-800 text-stone-200 border border-slate-600 rounded-lg px-3 py-2 text-sm
+                   placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-stone-500"
       />
       {/* datalist: inputに入力補完候補を提供する（ブラウザが候補を表示してくれる） */}
       <datalist id={listId}>

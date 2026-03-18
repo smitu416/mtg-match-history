@@ -78,13 +78,13 @@ export function PlayerStats() {
 
   // データ取得中
   if (!playerRecords) {
-    return <div className="text-center py-10 text-gray-400">読み込み中...</div>;
+    return <div className="text-center py-10 text-stone-500">読み込み中...</div>;
   }
 
   // データなし
   if (playerRecords.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-400">
+      <div className="text-center py-10 text-stone-500">
         <p>対戦データがありません</p>
       </div>
     );
@@ -94,8 +94,8 @@ export function PlayerStats() {
   // 表示部分（JSX）
   // ===================================
   return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <h3 className="font-bold text-gray-800 mb-3">プレイヤー別戦績</h3>
+    <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
+      <h3 className="font-bold text-stone-300 mb-3">プレイヤー別戦績</h3>
 
       <div className="space-y-3">
         {playerRecords.map((record) => (
@@ -120,25 +120,25 @@ function PlayerRecordRow({ record }: PlayerRecordRowProps) {
     record.winRate >= 40 ? 'bg-yellow-500' : 'bg-red-500';
 
   return (
-    <div className="p-3 border border-gray-100 rounded-lg">
+    <div className="p-3 border border-slate-700 rounded-lg">
       {/* プレイヤー名と勝敗数 */}
       <div className="flex justify-between items-center mb-1.5">
-        <span className="font-medium text-gray-800">{record.playerName}</span>
-        <span className="text-sm text-gray-600">
+        <span className="font-medium text-stone-100">{record.playerName}</span>
+        <span className="text-sm text-stone-400">
           {record.wins}勝 {record.losses}敗
-          <span className="text-gray-400 ml-1">（{record.total}戦）</span>
+          <span className="text-stone-500 ml-1">（{record.total}戦）</span>
         </span>
       </div>
 
       {/* 勝率プログレスバー */}
       <div className="flex items-center gap-2">
-        <div className="flex-1 bg-gray-200 rounded-full h-2">
+        <div className="flex-1 bg-slate-700 rounded-full h-2">
           <div
             className={`${barColor} h-2 rounded-full transition-all`}
             style={{ width: `${record.winRate}%` }} // インラインスタイルで幅を動的に設定
           />
         </div>
-        <span className="text-sm font-semibold text-gray-700 w-10 text-right">
+        <span className="text-sm font-semibold text-stone-300 w-10 text-right">
           {record.winRate}%
         </span>
       </div>

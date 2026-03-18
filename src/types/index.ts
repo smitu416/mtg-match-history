@@ -34,10 +34,11 @@ export interface Match {
   myDeck: string;              // 自分のデッキ名（例: "ピナクル"）
   opponentPlayerName: string;  // 相手プレイヤー名（例: "まさっち"）
   opponentDeck: string;        // 相手のデッキ名（例: "カニL/O"）
-  playOrder: PlayOrder;        // 先攻か後攻か
+  playOrder: PlayOrder;        // デフォルトの先攻・後攻（ゲームごとに上書き可能）
   game1: Game;                 // 1ゲーム目の結果
   game2: Game;                 // 2ゲーム目の結果
   game3: Game;                 // 3ゲーム目の結果
+  groupId?: string;            // 所属するMatchGroupのID（未設定の場合は日付でグルーピング）
 }
 
 // -----------------------------------

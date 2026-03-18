@@ -27,16 +27,16 @@ const OUTCOMES: GameOutcome[] = ['勝ち', '負け', 'ー'];
 // 勝ち=緑、負け=赤、ー=グレーで色分けする
 const OUTCOME_STYLES: Record<GameOutcome, { active: string; inactive: string }> = {
   '勝ち': {
-    active: 'bg-green-500 text-white border-green-500',   // 選択中
-    inactive: 'bg-white text-green-600 border-green-300 hover:bg-green-50', // 非選択
+    active: 'bg-green-600 text-white border-green-600',   // 選択中
+    inactive: 'bg-slate-800 text-green-400 border-green-800 hover:bg-green-900/40', // 非選択
   },
   '負け': {
-    active: 'bg-red-500 text-white border-red-500',
-    inactive: 'bg-white text-red-600 border-red-300 hover:bg-red-50',
+    active: 'bg-red-600 text-white border-red-600',
+    inactive: 'bg-slate-800 text-red-400 border-red-800 hover:bg-red-900/40',
   },
   'ー': {
-    active: 'bg-gray-400 text-white border-gray-400',
-    inactive: 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50',
+    active: 'bg-slate-600 text-white border-slate-600',
+    inactive: 'bg-slate-800 text-stone-400 border-slate-600 hover:bg-slate-700',
   },
 };
 
@@ -59,11 +59,11 @@ export function GameResultRow({ gameNumber, game, onChange }: GameResultRowProps
   };
 
   return (
-    <div className="border rounded-lg p-3 bg-gray-50">
+    <div className="border border-slate-700 rounded-lg p-3 bg-slate-800/50">
       {/* ゲーム番号とボタン行 */}
       <div className="flex items-center gap-3 mb-2">
         {/* ゲーム番号ラベル（例: "G1"） */}
-        <span className="font-bold text-gray-700 w-6 shrink-0">
+        <span className="font-bold text-stone-300 w-6 shrink-0">
           G{gameNumber}
         </span>
 
@@ -98,9 +98,9 @@ export function GameResultRow({ gameNumber, game, onChange }: GameResultRowProps
         onChange={(e) => handleNotesChange(e.target.value)}
         placeholder={`G${gameNumber} のメモ（使ったカード、決め手など）`}
         rows={2}
-        className="w-full text-sm border border-gray-200 rounded p-2 resize-none
-                   focus:outline-none focus:ring-2 focus:ring-indigo-300
-                   bg-white placeholder-gray-400"
+        className="w-full text-sm bg-slate-900 text-stone-300 border border-slate-700 rounded p-2 resize-none
+                   focus:outline-none focus:ring-2 focus:ring-stone-500
+                   placeholder-slate-600"
       />
     </div>
   );
