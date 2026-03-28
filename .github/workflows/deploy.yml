@@ -1,0 +1,81 @@
+# ==========================================
+# GitHub Pages デプロイワークフロー
+# ==========================================
+# main ブランチへ push されたとき、自動でビルドして
+# GitHub Pages に公開する。
+
+name: Deploy to GitHub Pages
+
+on:
+  # main ブランチへの push 時にデプロイ
+  push:
+    branches:
+      - main
+  # 手動実行も可能にする
+  workflow_dispatch:
+
+# GitHub Pages への書き込み権限を付与
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時デプロイを防ぐ（進行中のデプロイはキャンセルせず待機）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # -----------------------------------
+  # ビルドジョブ
+  # -----------------------------------
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリのコードを取得
+      - name: コードを取得
+        uses: actions/checkout@v4
+
+      # Node.js をセットアップ
+      - name: Node.js をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 依存パッケージをインストール
+      - name: パッケージをインストール
+        run: npm ci
+
+      # 本番用ビルドを実行（dist/ フォルダに出力）
+      - name: ビルド
+        run: npm run build
+
+      # GitHub Pages へアップロードする準備
+      - name: Pages の設定
+        uses: actions/configure-pages@v5
+
+      # dist/ フォルダを Pages 用アーティファクトとしてアップロード
+      - name: アーティファクトをアップロード
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # -----------------------------------
+  # デプロイジョブ（ビルド完了後に実行）
+  # -----------------------------------
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    # GitHub Pages 環境を指定
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # アーティファクトを GitHub Pages にデプロイ
+      - name: GitHub Pages にデプロイ
+        id: deployment
+        uses: actions/deploy-pages@v4

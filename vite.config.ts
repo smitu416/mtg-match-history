@@ -8,6 +8,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // GitHub Pages のサブパス対応（リポジトリ名をベースパスに設定）
+  base: '/mtg-match-history/',
   plugins: [
     // Reactの高速リフレッシュ機能を有効にする
     react(),
